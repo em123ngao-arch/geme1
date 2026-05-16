@@ -110,8 +110,9 @@ Yêu cầu:
 
 
 class GameManager {
-    constructor(io) {
+    constructor(io, db) {
         this.io = io;
+        this.db = db;
         this.onlineUsers = new Map(); // socket.id -> user profile
         this.queueMode1 = []; // socket.id
         this.queueMode2 = []; // socket.id
@@ -460,25 +461,54 @@ class GameManager {
         this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
     }
 
-    endMatch(matchId) {
+    async endMatch(matchId) {
         const match = this.matches.get(matchId);
         if (!match) return;
 
         match.status = 'finished';
-        let winner = null;
+        let winnerSocketId = null;
 
-        const p1 = match.players[0].socketId;
-        const p2 = match.players[1].socketId;
+        const p1 = match.players[0];
+        const p2 = match.players[1];
 
         if (match.mode === 1) {
-            if (match.scores[p1] > match.scores[p2]) winner = p1;
-            else if (match.scores[p2] > match.scores[p1]) winner = p2;
+            if (match.scores[p1.socketId] > match.scores[p2.socketId]) winnerSocketId = p1.socketId;
+            else if (match.scores[p2.socketId] > match.scores[p1.socketId]) winnerSocketId = p2.socketId;
         } else {
-            if (match.roundWins[p1] > match.roundWins[p2]) winner = p1;
-            else if (match.roundWins[p2] > match.roundWins[p1]) winner = p2;
+            if (match.roundWins[p1.socketId] > match.roundWins[p2.socketId]) winnerSocketId = p1.socketId;
+            else if (match.roundWins[p2.socketId] > match.roundWins[p1.socketId]) winnerSocketId = p2.socketId;
         }
 
-        this.io.to(matchId).emit('match_finished', { winner, finalState: this.getSafeMatchState(match) });
+        const winner = winnerSocketId ? match.players.find(p => p.socketId === winnerSocketId) : null;
+        
+        // --- Database Persistence ---
+        if (this.db) {
+            try {
+                const p1Score = match.mode === 1 ? match.scores[p1.socketId] : match.roundWins[p1.socketId];
+                const p2Score = match.mode === 1 ? match.scores[p2.socketId] : match.roundWins[p2.socketId];
+                const winnerDbId = winner ? winner.id : null;
+
+                // 1. Save match record
+                await this.db.query(
+                    'INSERT INTO matches (mode, p1_id, p2_id, p1_score, p2_score, winner_id) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [match.mode, p1.id, p2.id, p1Score, p2Score, winnerDbId]
+                );
+
+                // 2. Update winner's win count
+                if (winnerDbId) {
+                    const winsColumn = match.mode === 1 ? 'wins_mode1' : 'wins_mode2';
+                    await this.db.query(
+                        `UPDATE users SET ${winsColumn} = ${winsColumn} + 1 WHERE id = $1`,
+                        [winnerDbId]
+                    );
+                    console.log(`[DB] Updated leaderboard for user ${winner.displayName} (ID: ${winnerDbId})`);
+                }
+            } catch (dbErr) {
+                console.error("[DB] Error saving match results:", dbErr);
+            }
+        }
+
+        this.io.to(matchId).emit('match_finished', { winner: winnerSocketId, finalState: this.getSafeMatchState(match) });
         this.matches.delete(matchId);
     }
 

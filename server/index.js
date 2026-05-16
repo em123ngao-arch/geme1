@@ -155,7 +155,7 @@ app.get('/api/history', (req, res) => {
 });
 
 // --- Socket.io Setup ---
-const gameManager = new GameManager(io);
+const gameManager = new GameManager(io, db);
 
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
