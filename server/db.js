@@ -1,51 +1,62 @@
-const duckdb = require('duckdb');
-const path = require('path');
+const { Pool } = require('pg');
+require('dotenv').config();
 
-const dbPath = path.resolve(__dirname, 'game_duck.db');
-const db = new duckdb.Database(dbPath);
-const con = db.connect();
-
-console.log('Connected to the DuckDB database.');
-
-con.run('CREATE SEQUENCE IF NOT EXISTS id_seq;');
-con.run(`
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY DEFAULT nextval('id_seq'),
-        email TEXT UNIQUE,
-        password TEXT,
-        displayName TEXT,
-        avatar TEXT,
-        winsMode1 INTEGER DEFAULT 0,
-        lossesMode1 INTEGER DEFAULT 0,
-        winsMode2 INTEGER DEFAULT 0,
-        lossesMode2 INTEGER DEFAULT 0,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-`, (err) => {
-    if (err) console.error('Error creating users table:', err.message);
-    else {
-        // Safe schema evolution for existing table
-        con.run("ALTER TABLE users ADD COLUMN winsMode1 INTEGER DEFAULT 0;", () => {});
-        con.run("ALTER TABLE users ADD COLUMN lossesMode1 INTEGER DEFAULT 0;", () => {});
-        con.run("ALTER TABLE users ADD COLUMN winsMode2 INTEGER DEFAULT 0;", () => {});
-        con.run("ALTER TABLE users ADD COLUMN lossesMode2 INTEGER DEFAULT 0;", () => {});
-    }
+// Sử dụng biến môi trường DATABASE_URL để kết nối
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Cần thiết khi kết nối với Supabase từ bên ngoài
+  }
 });
 
-con.run('CREATE SEQUENCE IF NOT EXISTS match_seq;');
-con.run(`
-    CREATE TABLE IF NOT EXISTS matches (
-        id INTEGER PRIMARY KEY DEFAULT nextval('match_seq'),
-        mode INTEGER,
-        p1Id INTEGER,
-        p2Id INTEGER,
-        p1Score INTEGER,
-        p2Score INTEGER,
-        winnerId INTEGER,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-`, (err) => {
-    if (err) console.error('Error creating matches table:', err.message);
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
 });
 
-module.exports = con;
+const initDb = async () => {
+  const client = await pool.connect();
+  try {
+    console.log('Initializing Supabase tables...');
+    
+    // Tạo bảng users
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        display_name TEXT DEFAULT '',
+        avatar TEXT DEFAULT '',
+        wins_mode1 INTEGER DEFAULT 0,
+        losses_mode1 INTEGER DEFAULT 0,
+        wins_mode2 INTEGER DEFAULT 0,
+        losses_mode2 INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Tạo bảng matches
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS matches (
+        id SERIAL PRIMARY KEY,
+        mode INTEGER NOT NULL,
+        p1_id INTEGER REFERENCES users(id),
+        p2_id INTEGER REFERENCES users(id),
+        p1_score INTEGER DEFAULT 0,
+        p2_score INTEGER DEFAULT 0,
+        winner_id INTEGER REFERENCES users(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log('Supabase tables ready!');
+  } catch (err) {
+    console.error('Error initializing Supabase database:', err);
+  } finally {
+    client.release();
+  }
+};
+
+initDb();
+
+module.exports = pool;
