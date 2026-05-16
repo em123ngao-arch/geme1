@@ -1,7 +1,7 @@
 require('dotenv').config();
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const fs = require('fs');
 const path = require('path');
 
@@ -12,7 +12,10 @@ function removeAccents(str) {
 function getQuestionsFromJSON(count = 5, topicQuery = null) {
     try {
         const topicsPath = path.join(__dirname, '../data/topics.json');
-        if (!fs.existsSync(topicsPath)) return [];
+        if (!fs.existsSync(topicsPath)) {
+            console.warn("topics.json not found at:", topicsPath);
+            return [];
+        }
         const topics = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
 
         let fileName = null;
@@ -45,7 +48,10 @@ function getQuestionsFromJSON(count = 5, topicQuery = null) {
         if (!fileName) return [];
 
         const filePath = path.join(__dirname, '../data', fileName);
-        if (!fs.existsSync(filePath)) return [];
+        if (!fs.existsSync(filePath)) {
+            console.warn("Question file not found:", filePath);
+            return [];
+        }
         const data = fs.readFileSync(filePath, 'utf8');
         const questions = JSON.parse(data);
         
@@ -72,25 +78,26 @@ async function generateQuestionsFromAI(topic, forceAI = false) {
     }
 
     try {
-        const response = await ai.getGenerativeModel({ model: "gemini-1.5-flash" }).generateContent({
-            contents: [{
-                role: 'user',
-                parts: [{
-                    text: `Tạo 5 câu hỏi trắc nghiệm cực khó, lắt léo về chủ đề "${topic}" bằng tiếng Việt.
-Trả về DUY NHẤT một mảng JSON, không có chữ text nào khác, không dùng markdown block (không dùng \`\`\`json).
-Cấu trúc: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`
-                }]
-            }],
+        const model = ai.getGenerativeModel({ 
+            model: "gemini-1.5-flash",
             generationConfig: {
                 responseMimeType: "application/json",
             }
         });
 
-        let text = response.response.text();
-        console.log("AI Response received");
+        const result = await model.generateContent(`Tạo 5 câu hỏi trắc nghiệm cực khó, lắt léo về chủ đề "${topic}" bằng tiếng Việt.
+Trả về một mảng JSON có cấu trúc: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`);
+
+        const response = await result.response;
+        let text = response.text();
+        console.log("AI Response received for topic:", topic);
         
-        if (text.startsWith('```json')) text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        else if (text.startsWith('```')) text = text.replace(/```/g, '').trim();
+        // Làm sạch dữ liệu nếu cần (trong trường hợp responseMimeType không hoạt động như ý)
+        if (text.includes('```json')) {
+            text = text.split('```json')[1].split('```')[0].trim();
+        } else if (text.includes('```')) {
+            text = text.split('```')[1].split('```')[0].trim();
+        }
 
         const data = JSON.parse(text);
         if (!Array.isArray(data) || data.length < 5) throw new Error("Invalid format or insufficient questions from AI");
