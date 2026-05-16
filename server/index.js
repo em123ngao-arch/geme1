@@ -25,8 +25,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-dev';
 
 // --- Auth Routes ---
 app.post('/register', async (req, res) => {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+    email = email.toLowerCase().trim();
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -41,11 +43,14 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
+    email = email.trim();
+
     try {
-        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        // Tìm user không phân biệt hoa thường
+        const result = await db.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email]);
         const user = result.rows[0];
         
         if (!user) return res.status(400).json({ error: 'Invalid email or password' });
