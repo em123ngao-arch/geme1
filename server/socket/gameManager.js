@@ -56,35 +56,53 @@ function getQuestionsFromJSON(count = 5, topicQuery = null) {
     }
 }
 
-async function generateQuestionsFromAI(topic) {
-    // Ưu tiên lấy từ JSON trước
-    const localQuestions = getQuestionsFromJSON(5, topic);
-    if (localQuestions.length >= 5) {
-        return localQuestions;
+async function generateQuestionsFromAI(topic, forceAI = false) {
+    console.log(`Generating questions for topic: "${topic}" (forceAI: ${forceAI})`);
+    
+    // Nếu không bắt buộc AI, ưu tiên lấy từ JSON trước
+    if (!forceAI) {
+        const localQuestions = getQuestionsFromJSON(5, topic);
+        if (localQuestions && localQuestions.length >= 5) {
+            console.log(`Using ${localQuestions.length} questions from local JSON for "${topic}"`);
+            return localQuestions;
+        }
+        console.log(`Local JSON not found or insufficient for "${topic}". Falling back to AI...`);
+    } else {
+        console.log(`Forced AI generation for "${topic}"`);
     }
 
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `Tạo 5 câu hỏi trắc nghiệm cực khó, lắt léo về chủ đề "${topic}" bằng tiếng Việt.
+        const response = await ai.getGenerativeModel({ model: "gemini-1.5-flash" }).generateContent({
+            contents: [{
+                role: 'user',
+                parts: [{
+                    text: `Tạo 5 câu hỏi trắc nghiệm cực khó, lắt léo về chủ đề "${topic}" bằng tiếng Việt.
 Trả về DUY NHẤT một mảng JSON, không có chữ text nào khác, không dùng markdown block (không dùng \`\`\`json).
-Cấu trúc: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`,
-            config: {
+Cấu trúc: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`
+                }]
+            }],
+            generationConfig: {
                 responseMimeType: "application/json",
             }
         });
 
-        let text = response.text;
+        let text = response.response.text();
+        console.log("AI Response received");
+        
         if (text.startsWith('```json')) text = text.replace(/```json/g, '').replace(/```/g, '').trim();
         else if (text.startsWith('```')) text = text.replace(/```/g, '').trim();
 
         const data = JSON.parse(text);
-        if (!Array.isArray(data) || data.length < 5) throw new Error("Invalid format");
+        if (!Array.isArray(data) || data.length < 5) throw new Error("Invalid format or insufficient questions from AI");
         return data.slice(0, 5);
     } catch (err) {
-        console.error("AI Generation Error:", err);
+        console.error("AI Generation Error for topic:", topic, err);
+        // Nếu AI lỗi, lấy ngẫu nhiên từ JSON làm fallback
         const fallback = getQuestionsFromJSON(5);
-        if (fallback.length > 0) return fallback;
+        if (fallback.length > 0) {
+            console.log("Using random fallback from JSON due to AI error");
+            return fallback;
+        }
         
         return [
             { q: `Câu hỏi mẫu về ${topic} (Do lỗi kết nối AI)?`, options: ["Đúng", "Sai", "A", "B"], a: 0 },
@@ -239,7 +257,24 @@ class GameManager {
             match.status = 'generating';
             this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
 
-            match.questions = await generateQuestionsFromAI(topic);
+            // Kiểm tra xem topic có trong danh sách JSON không (sử dụng logic khớp tên linh hoạt)
+            let isKnownTopic = false;
+            try {
+                const topicsPath = path.join(__dirname, '../data/topics.json');
+                if (fs.existsSync(topicsPath)) {
+                    const topicsList = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
+                    const normalizedQuery = removeAccents(topic.toLowerCase().trim());
+                    isKnownTopic = Object.keys(topicsList).some(k => 
+                        k.toLowerCase() === topic.toLowerCase().trim() || 
+                        removeAccents(k.toLowerCase()) === normalizedQuery
+                    );
+                }
+            } catch (e) {
+                console.error("Error checking topics list:", e);
+            }
+
+            // Nếu là topic lạ (tự nhập) -> Dùng AI. Nếu là topic quen -> Ưu tiên JSON.
+            match.questions = await generateQuestionsFromAI(topic, !isKnownTopic);
             match.currentQuestionIndex = -1;
 
             this.startCountdown(matchId);
@@ -294,7 +329,8 @@ class GameManager {
         };
 
         if (mode === 1 || mode === 2) {
-            generateQuestionsFromAI(randomTopic).then(q => {
+            // Vòng 1 luôn dùng AI tạo đề theo yêu cầu
+            generateQuestionsFromAI(randomTopic, true).then(q => {
                 const m = this.matches.get(matchId);
                 if (m) m.prefetchedQuestions = q;
             });
