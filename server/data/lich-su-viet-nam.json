@@ -1,0 +1,17 @@
+[
+  {"q": "Tại sao chúng ta ký Hiệp định Sơ bộ với Pháp vào ngày 6 tháng 3 năm 1946?", "options": ["Lực lượng của ta còn yếu so với Pháp, tránh gặp phải nhiều kẻ thù cùng một lúc", "Để nhanh chóng khiến 200.000 quân Trung Hoa Dân quốc rời khỏi nước ta", "Tận dụng thời gian hòa hoãn để củng cố và phát triển lực lượng cách mạng", "Tạo điều kiện để lập lại hòa bình ở Việt Nam"], "a": 1, "topic": "Lịch sử Việt Nam"},
+  {"q": "Ngày 28 tháng 2 năm 1946, Pháp đàm phán và ký kết Hiệp ước Hoa - Pháp với Chính phủ Trung Hoa Dân quốc, lúc đó nhân dân ta chọn con đường nào?", "options": ["Tiếp tục hòa hoãn với Trung Hoa Dân quốc", "Tấn công Trung Hoa Dân quốc", "Hòa hoãn với Pháp để dùng Pháp đuổi Trung Hoa Dân quốc ra khỏi nước", "Tấn công cả Pháp và Trung Hoa Dân quốc"], "a": 2, "topic": "Lịch sử Việt Nam"},
+  {"q": "Chủ tịch Hồ Chí Minh kêu gọi 'Tăng gia sản xuất, Tăng gia sản xuất ngay! Tăng gia sản xuất nữa!' nhằm mục đích gì?", "options": ["Giải quyết khó khăn về nạn đói", "Động viên đồng bào tăng cường sản xuất", "Giải quyết khó khăn về kinh tế", "Thực hiện ngày đồng tâm"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Khẩu hiệu 'Ngày đồng tâm' là một trong những biện pháp nhằm giải quyết vấn đề gì?", "options": ["Nạn mù chữ", "Nạn đói", "Khó khăn về tài chính", "Ngoại xâm"], "a": 1, "topic": "Lịch sử Việt Nam"},
+  {"q": "Chiến dịch Điện Biên Phủ kết thúc vào ngày tháng năm nào?", "options": ["07/05/1954", "13/03/1954", "02/09/1954", "10/10/1954"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Ai là vị vua đầu tiên của triều đại nhà Đinh?", "options": ["Đinh Bộ Lĩnh", "Đinh Toàn", "Lê Hoàn", "Đinh Liễn"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Triều đại nào dài nhất trong lịch sử phong kiến Việt Nam?", "options": ["Nhà Lý", "Nhà Trần", "Nhà Hậu Lê", "Nhà Nguyễn"], "a": 2, "topic": "Lịch sử Việt Nam"},
+  {"q": "Vị vua nào đã dời đô từ Hoa Lư về Thăng Long vào năm 1010?", "options": ["Lý Thái Tổ", "Lý Thái Tông", "Đinh Tiên Hoàng", "Lê Đại Hành"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Trận chiến trên sông Bạch Đằng năm 938 đánh tan quân Nam Hán do ai lãnh đạo?", "options": ["Ngô Quyền", "Lê Hoàn", "Trần Hưng Đạo", "Đinh Bộ Lĩnh"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Tác phẩm 'Bình Ngô Đại Cáo' được Nguyễn Trãi soạn thảo thay lời của ai?", "options": ["Lê Lợi", "Trần Hưng Đạo", "Quang Trung", "Lý Thường Kiệt"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Nhà Trần đã mấy lần lãnh đạo nhân dân kháng chiến chống quân xâm lược Nguyên Mông?", "options": ["1", "2", "3", "4"], "a": 2, "topic": "Lịch sử Việt Nam"},
+  {"q": "Vị vua cuối cùng của triều đại phong kiến Việt Nam là ai?", "options": ["Bảo Đại", "Duy Tân", "Hàm Nghi", "Khải Định"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Quốc hiệu của nước ta thời vua Hùng là gì?", "options": ["Văn Lang", "Âu Lạc", "Đại Việt", "Vạn Xuân"], "a": 0, "topic": "Lịch sử Việt Nam"},
+  {"q": "Thành Cổ Loa gắn liền với vị vua nào?", "options": ["Hùng Vương", "An Dương Vương", "Ngô Quyền", "Lý Nam Đế"], "a": 1, "topic": "Lịch sử Việt Nam"},
+  {"q": "Ai là người nữ anh hùng dân tộc lãnh đạo cuộc khởi nghĩa chống quân Đông Hán năm 40?", "options": ["Hai Bà Trưng", "Bà Triệu", "Bùi Thị Xuân", "Võ Thị Sáu"], "a": 0, "topic": "Lịch sử Việt Nam"}
+]

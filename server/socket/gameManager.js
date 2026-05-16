@@ -5,20 +5,40 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const fs = require('fs');
 const path = require('path');
 
-function getQuestionsFromJSON(count = 5) {
+function getQuestionsFromJSON(count = 5, topic = null) {
     try {
-        const filePath = path.join(__dirname, '../data/questions.json');
+        const topicsPath = path.join(__dirname, '../data/topics.json');
+        if (!fs.existsSync(topicsPath)) return [];
+        const topics = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
+
+        let fileName = topics[topic];
+        
+        // Nếu không có topic cụ thể hoặc không tìm thấy, chọn ngẫu nhiên một chủ đề có sẵn
+        if (!fileName) {
+            const keys = Object.keys(topics);
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            fileName = topics[randomKey];
+        }
+
+        const filePath = path.join(__dirname, '../data', fileName);
         if (!fs.existsSync(filePath)) return [];
         const data = fs.readFileSync(filePath, 'utf8');
         const questions = JSON.parse(data);
+        
         return questions.sort(() => 0.5 - Math.random()).slice(0, count);
     } catch (err) {
-        console.error("Error reading questions.json:", err);
+        console.error("Error reading questions from JSON:", err);
         return [];
     }
 }
 
 async function generateQuestionsFromAI(topic) {
+    // Ưu tiên lấy từ JSON trước
+    const localQuestions = getQuestionsFromJSON(5, topic);
+    if (localQuestions.length >= 5) {
+        return localQuestions;
+    }
+
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -221,8 +241,15 @@ class GameManager {
         const p1User = { ...this.onlineUsers.get(p1), socketId: p1 };
         const p2User = { ...this.onlineUsers.get(p2), socketId: p2 };
 
-        const topics = ['Lịch Sử Toàn Thư', 'Khám phá Vũ trụ', 'Khoa học Lượng tử', 'Thể Thao Đỉnh Cao', 'Địa Lý Thú Vị', 'Văn Học Nghệ Thuật', 'Kiến Thức Tổng Hợp'];
-        const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+        let availableTopics = ['Lịch sử Việt Nam', 'Địa lý Việt Nam', 'Văn học Việt Nam', 'Khoa học', 'Thể thao'];
+        try {
+            const topicsPath = path.join(__dirname, '../data/topics.json');
+            if (fs.existsSync(topicsPath)) {
+                availableTopics = Object.keys(JSON.parse(fs.readFileSync(topicsPath, 'utf8')));
+            }
+        } catch (e) {}
+        
+        const randomTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
 
         const match = {
             id: matchId,
@@ -243,15 +270,10 @@ class GameManager {
         };
 
         if (mode === 1 || mode === 2) {
-            // Nếu là "Kiến Thức Tổng Hợp", ưu tiên lấy từ JSON
-            if (randomTopic === 'Kiến Thức Tổng Hợp') {
-                match.prefetchedQuestions = getQuestionsFromJSON(5);
-            } else {
-                generateQuestionsFromAI(randomTopic).then(q => {
-                    const m = this.matches.get(matchId);
-                    if (m) m.prefetchedQuestions = q;
-                });
-            }
+            generateQuestionsFromAI(randomTopic).then(q => {
+                const m = this.matches.get(matchId);
+                if (m) m.prefetchedQuestions = q;
+            });
         }
 
         this.matches.set(matchId, match);

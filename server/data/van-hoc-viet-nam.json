@@ -1,0 +1,17 @@
+[
+  {"q": "Văn học Việt Nam gồm mấy bộ phận lớn?", "options": ["1", "2", "3", "4"], "a": 1, "topic": "Văn học Việt Nam"},
+  {"q": "Văn học dân gian Việt Nam ra đời khi nào?", "options": ["Khi có chữ viết", "Khi xã hội phân chia giai cấp", "Từ thời xa xưa, khi chưa có chữ viết", "Thời kỳ hiện đại"], "a": 2, "topic": "Văn học Việt Nam"},
+  {"q": "Tác phẩm nào sau đây không thuộc văn học dân gian?", "options": ["Truyện cổ tích", "Ca dao, dân ca", "Truyện Kiều", "Thần thoại"], "a": 2, "topic": "Văn học Việt Nam"},
+  {"q": "Nghề in chữ Quốc ngữ phát triển mạnh ở Việt Nam vào khoảng thời gian nào?", "options": ["Đầu thế kỷ XX", "Đầu thế kỷ XIX", "Cuối thế kỷ XIX", "Đầu thế kỷ XVIII"], "a": 2, "topic": "Văn học Việt Nam"},
+  {"q": "Ý nào sau đây KHÔNG đúng khi nói về văn học viết của nước ta?", "options": ["Là sáng tác của trí thức, được ghi lại bằng chữ viết", "Phát triển qua ba thời kỳ lớn", "Chỉ sử dụng duy nhất chữ Hán và chữ Nôm", "Sử dụng chữ Hán, chữ Nôm và chữ Quốc ngữ"], "a": 2, "topic": "Văn học Việt Nam"},
+  {"q": "Văn học trung đại Việt Nam được sáng tác chủ yếu bằng loại chữ viết nào?", "options": ["Chữ Quốc ngữ và chữ Hán", "Chữ Nôm và chữ Quốc ngữ", "Chữ Hán và chữ Nôm", "Chữ Nho và chữ Nôm"], "a": 2, "topic": "Văn học Việt Nam"},
+  {"q": "Ai là tác giả của tác phẩm kinh điển 'Truyện Kiều'?", "options": ["Nguyễn Du", "Nguyễn Trãi", "Nguyễn Khuyến", "Nguyễn Đình Chiểu"], "a": 0, "topic": "Văn học Việt Nam"},
+  {"q": "Tác phẩm 'Nam quốc sơn hà' tương truyền do vị tướng nào viết?", "options": ["Lý Thường Kiệt", "Trần Hưng Đạo", "Lê Lợi", "Nguyễn Trãi"], "a": 0, "topic": "Văn học Việt Nam"},
+  {"q": "Thể loại thơ nào chiếm ưu thế trong văn học trung đại Việt Nam?", "options": ["Tiểu thuyết chương hồi", "Thơ Đường luật", "Kịch nói", "Truyện ngắn"], "a": 1, "topic": "Văn học Việt Nam"},
+  {"q": "Tác phẩm 'Hịch tướng sĩ' là của ai?", "options": ["Trần Quang Khải", "Trần Quốc Tuấn", "Phạm Ngũ Lão", "Trần Khánh Dư"], "a": 1, "topic": "Văn học Việt Nam"},
+  {"q": "Nữ sĩ nào được mệnh danh là 'Bà chúa thơ Nôm'?", "options": ["Hồ Xuân Hương", "Bà Huyện Thanh Quan", "Đoàn Thị Điểm", "Xuân Quỳnh"], "a": 0, "topic": "Văn học Việt Nam"},
+  {"q": "Tác phẩm 'Lục Vân Tiên' là của tác giả nào?", "options": ["Nguyễn Đình Chiểu", "Nguyễn Khuyến", "Tú Xương", "Cao Bá Quát"], "a": 0, "topic": "Văn học Việt Nam"},
+  {"q": "Nội dung chính của 'Chinh phụ ngâm' là gì?", "options": ["Nỗi lòng người vợ nhớ chồng đi lính", "Nỗi nhớ quê hương của người xa xứ", "Lòng yêu nước của người chiến sĩ", "Tình cảm gia đình"], "a": 0, "topic": "Văn học Việt Nam"},
+  {"q": "Nguyễn Trãi là tác giả của tập thơ chữ Nôm nào?", "options": ["Quốc âm thi tập", "Ức Trai thi tập", "Bình Ngô đại cáo", "Nhật ký trong tù"], "a": 0, "topic": "Văn học Việt Nam"},
+  {"q": "Văn học trung đại Việt Nam kéo dài từ thế kỷ X đến khoảng thời gian nào?", "options": ["Đầu thế kỷ XIX", "Cuối thế kỷ XIX", "Đầu thế kỷ XX", "Sau năm 1945"], "a": 1, "topic": "Văn học Việt Nam"}
+]

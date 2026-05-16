@@ -1,0 +1,17 @@
+[
+  {"q": "Thế vận hội Olympic đầu tiên được tổ chức khi nào?", "options": ["1000 TCN", "776 TCN", "500 TCN", "Năm 0"], "a": 1, "topic": "Thể thao"},
+  {"q": "Môn thể thao nào được coi là ra đời sớm nhất trên thế giới?", "options": ["Chạy bộ", "Đấu vật", "Bắn cung", "Đua ngựa"], "a": 1, "topic": "Thể thao"},
+  {"q": "Cristiano Ronaldo đã giành được bao nhiêu Quả bóng vàng?", "options": ["3", "4", "5", "6"], "a": 2, "topic": "Thể thao"},
+  {"q": "Giải vô địch bóng đá thế giới (World Cup) đầu tiên tổ chức ở đâu?", "options": ["Brazil", "Argentina", "Uruguay", "Ý"], "a": 2, "topic": "Thể thao"},
+  {"q": "Tay vợt nam nào giành được nhiều danh hiệu Grand Slam nhất?", "options": ["Roger Federer", "Rafael Nadal", "Novak Djokovic", "Andy Murray"], "a": 2, "topic": "Thể thao"},
+  {"q": "Thời gian thi đấu chính thức của một trận bóng đá là bao nhiêu phút?", "options": ["45 phút", "90 phút", "100 phút", "60 phút"], "a": 1, "topic": "Thể thao"},
+  {"q": "Môn thể thao nào được mệnh danh là 'Môn thể thao Vua'?", "options": ["Bóng rổ", "Tennis", "Bóng đá", "Bóng chuyền"], "a": 2, "topic": "Thể thao"},
+  {"q": "Cự ly chuẩn của một cuộc chạy Marathon là bao nhiêu?", "options": ["21 km", "42.195 km", "10 km", "50 km"], "a": 1, "topic": "Thể thao"},
+  {"q": "Đội tuyển quốc gia nào vô địch World Cup nhiều lần nhất?", "options": ["Đức", "Ý", "Brazil", "Pháp"], "a": 2, "topic": "Thể thao"},
+  {"q": "Trong bóng rổ, một quả ném phạt thành công được tính bao nhiêu điểm?", "options": ["1 điểm", "2 điểm", "3 điểm", "0 điểm"], "a": 0, "topic": "Thể thao"},
+  {"q": "Thế vận hội Mùa hè 2024 diễn ra tại thành phố nào?", "options": ["Tokyo", "Paris", "London", "Bắc Kinh"], "a": 1, "topic": "Thể thao"},
+  {"q": "Môn thể thao nào sử dụng gậy đánh quả bóng nhỏ vào các lỗ?", "options": ["Hockey", "Golf", "Cricket", "Bóng chày"], "a": 1, "topic": "Thể thao"},
+  {"q": "Kỷ lục thế giới chạy 100m nam hiện nay do ai nắm giữ?", "options": ["Yohan Blake", "Tyson Gay", "Usain Bolt", "Asafa Powell"], "a": 2, "topic": "Thể thao"},
+  {"q": "Trong bóng chuyền trong nhà, mỗi đội có bao nhiêu cầu thủ trên sân?", "options": ["5", "6", "7", "11"], "a": 1, "topic": "Thể thao"},
+  {"q": "Các chặng đua xe Công thức 1 thường được gọi là gì?", "options": ["Grand Prix", "Tour de France", "Le Mans", "Super Bowl"], "a": 0, "topic": "Thể thao"}
+]

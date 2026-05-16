@@ -1,0 +1,17 @@
+[
+  {"q": "Công nghệ AI (Trí tuệ nhân tạo) được ứng dụng trong lĩnh vực nào sau đây?", "options": ["Y tế", "Giáo dục", "Giao thông", "Cả 3 phương án trên"], "a": 3, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Đơn vị đo tần số của dòng điện là gì?", "options": ["Vôn (V)", "Ampe (A)", "Héc (Hz)", "Ôm (Ω)"], "a": 2, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Quy trình gia công nào dùng để thay đổi hình dạng, kích thước của phôi bằng cách cắt bỏ các lớp kim loại thừa?", "options": ["Đúc", "Rèn", "Gia công cắt gọt", "Hàn"], "a": 2, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Loại linh kiện điện tử nào có khả năng lưu trữ điện tích?", "options": ["Điện trở", "Tụ điện", "Cuộn cảm", "Điốt"], "a": 1, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Đại lượng nào đặc trưng cho khả năng cản trở dòng điện của vật dẫn?", "options": ["Điện áp (V)", "Cường độ dòng điện (I)", "Điện trở (R)", "Công suất (P)"], "a": 2, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Thiết bị nào hoạt động dựa trên nguyên lý cảm ứng điện từ?", "options": ["Điện trở nhiệt", "Máy biến áp", "Pin mặt trời", "Điốt phát quang (LED)"], "a": 1, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Vật liệu nào có tính dẫn điện tốt nhất?", "options": ["Thủy tinh", "Nhựa", "Đồng", "Gỗ"], "a": 2, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Tỉ số truyền i trong hệ thống truyền động cơ khí (như bánh răng) được tính bằng công thức nào?", "options": ["i = n1/n2 = D2/D1", "i = n2/n1 = D1/D2", "i = n1 * n2", "i = D1 * D2"], "a": 0, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Công nghệ Năng lượng tái tạo nào KHÔNG phụ thuộc trực tiếp vào thời tiết?", "options": ["Năng lượng mặt trời", "Năng lượng gió", "Năng lượng thủy triều", "Năng lượng sóng biển"], "a": 2, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Chức năng chính của hệ thống phanh ABS trên ô tô là gì?", "options": ["Giúp xe tăng tốc nhanh hơn", "Ngăn chặn bánh xe bị khóa cứng khi phanh gấp", "Tăng độ bám đường khi vào cua", "Tự động dừng xe khi gặp vật cản"], "a": 1, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Mạng LAN (Local Area Network) có phạm vi hoạt động ở đâu?", "options": ["Toàn cầu", "Một quốc gia", "Trong phạm vi địa lý nhỏ (tòa nhà, văn phòng)", "Giữa các châu lục"], "a": 2, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Vật liệu Composite được tạo thành từ đâu?", "options": ["Một nguyên tố kim loại duy nhất", "Hai hay nhiều thành phần có tính chất khác nhau", "Việc nấu chảy thủy tinh và cao su", "Các vật liệu nguồn gốc thực vật"], "a": 1, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "'Tự động hóa' (Automation) trong sản xuất có nghĩa là gì?", "options": ["Sử dụng 100% sức người", "Sử dụng các thiết bị điều khiển để vận hành quy trình thay thế con người", "Chỉ sử dụng robot trong mọi công đoạn", "Việc sản xuất không cần đến máy móc"], "a": 1, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Một nanômét (nm) bằng bao nhiêu mét?", "options": ["10^-6 m", "10^-7 m", "10^-9 m", "10^-12 m"], "a": 2, "topic": "Công nghệ & Kỹ thuật"},
+  {"q": "Trong hệ đơn vị SI, đơn vị của Công suất (Power) là gì?", "options": ["Jun (J)", "Oát (W)", "Newton (N)", "Pascal (Pa)"], "a": 1, "topic": "Công nghệ & Kỹ thuật"}
+]

@@ -1,0 +1,17 @@
+[
+  {"q": "Điểm cực Bắc của nước ta nằm ở vĩ độ nào?", "options": ["23°23'B", "23°22'B", "23°24'B", "23°25'B"], "a": 0, "topic": "Địa lý Việt Nam"},
+  {"q": "Điểm cực Nam của nước ta nằm ở vĩ độ nào?", "options": ["8°30'B", "8°34'B", "8°35'B", "8°36'B"], "a": 1, "topic": "Địa lý Việt Nam"},
+  {"q": "Vùng biển thuộc chủ quyền quốc gia trên biển là vùng nào?", "options": ["Lãnh hải", "Tiếp giáp lãnh hải", "Vùng đặc quyền kinh tế", "Thềm lục địa"], "a": 0, "topic": "Địa lý Việt Nam"},
+  {"q": "Nước ta có nguồn tài nguyên khoáng sản phong phú là do đâu?", "options": ["Nằm ở nơi giao nhau giữa các vành đai sinh khoáng", "Có diện tích lãnh thổ rộng lớn", "Trải qua lịch sử kiến tạo lâu dài và phức tạp", "Cả A và C đều đúng"], "a": 3, "topic": "Địa lý Việt Nam"},
+  {"q": "Đặc điểm nào sau đây không đúng với biển Đông?", "options": ["Là một biển rộng, diện tích khoảng 3,447 triệu km2", "Là biển tương đối kín", "Nằm trong vùng nhiệt đới ẩm gió mùa", "Có độ sâu trung bình lớn nhất thế giới"], "a": 3, "topic": "Địa lý Việt Nam"},
+  {"q": "Căn cứ vào Atlat Địa lí Việt Nam, tỉnh nào sau đây giáp biển?", "options": ["Hưng Yên", "Nam Định", "Hà Nam", "Vĩnh Phúc"], "a": 1, "topic": "Địa lý Việt Nam"},
+  {"q": "Tỉnh nào sau đây của Việt Nam có đường biên giới giáp với Lào?", "options": ["Quảng Trị", "Quảng Bình", "Nghệ An", "Tất cả các tỉnh trên"], "a": 3, "topic": "Địa lý Việt Nam"},
+  {"q": "Thành phố nào có dân số đông nhất Việt Nam?", "options": ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Hải Phòng"], "a": 1, "topic": "Địa lý Việt Nam"},
+  {"q": "Đảo nào có diện tích lớn nhất Việt Nam?", "options": ["Cát Bà", "Côn Đảo", "Phú Quốc", "Lý Sơn"], "a": 2, "topic": "Địa lý Việt Nam"},
+  {"q": "Sông nào dài nhất chảy hoàn toàn trong lãnh thổ Việt Nam?", "options": ["Sông Hồng", "Sông Đồng Nai", "Sông Đà", "Sông Cửu Long"], "a": 1, "topic": "Địa lý Việt Nam"},
+  {"q": "Đỉnh núi nào cao nhất Việt Nam và Đông Dương?", "options": ["Fansipan", "Pu Si Lung", "Tây Côn Lĩnh", "Ngọc Linh"], "a": 0, "topic": "Địa lý Việt Nam"},
+  {"q": "Vịnh nào của Việt Nam được UNESCO công nhận là Di sản Thiên nhiên Thế giới?", "options": ["Vịnh Cam Ranh", "Vịnh Hạ Long", "Vịnh Xuân Đài", "Vịnh Vân Phong"], "a": 1, "topic": "Địa lý Việt Nam"},
+  {"q": "Hồ nước ngọt tự nhiên lớn nhất Việt Nam là hồ nào?", "options": ["Hồ Tây", "Hồ Ba Bể", "Hồ Dầu Tiếng", "Hồ Trị An"], "a": 1, "topic": "Địa lý Việt Nam"},
+  {"q": "Tỉnh nào có diện tích lớn nhất Việt Nam hiện nay?", "options": ["Thanh Hóa", "Nghệ An", "Đắk Lắk", "Gia Lai"], "a": 1, "topic": "Địa lý Việt Nam"},
+  {"q": "Quần đảo Trường Sa thuộc đơn vị hành chính của tỉnh nào?", "options": ["Đà Nẵng", "Khánh Hòa", "Bình Thuận", "Bà Rịa - Vũng Tàu"], "a": 1, "topic": "Địa lý Việt Nam"}
+]
