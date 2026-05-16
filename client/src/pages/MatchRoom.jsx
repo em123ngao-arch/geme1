@@ -59,7 +59,7 @@ export default function MatchRoom({ user }) {
         
         {matchState.status === 'generating' ? (
           <div style={{ margin: '4rem 0' }}>
-            <h3 style={{ color: 'var(--text-muted)', fontSize: '1.5rem', marginBottom: '1rem' }}>Đang nhờ AI soạn đề về "{matchState.currentTopic}"... Vui lòng chờ!</h3>
+            <h3 style={{ color: 'var(--text-muted)', fontSize: '1.5rem', marginBottom: '1rem' }}>Đang chuẩn bị đề bài về "{matchState.currentTopic}"... Vui lòng chờ!</h3>
             <div style={{ marginTop: '2rem', animation: 'pulse 1.5s infinite', fontSize: '3rem' }}>🧠</div>
           </div>
         ) : countdown !== null ? (

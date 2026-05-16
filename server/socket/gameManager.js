@@ -5,20 +5,44 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const fs = require('fs');
 const path = require('path');
 
-function getQuestionsFromJSON(count = 5, topic = null) {
+function removeAccents(str) {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+
+function getQuestionsFromJSON(count = 5, topicQuery = null) {
     try {
         const topicsPath = path.join(__dirname, '../data/topics.json');
         if (!fs.existsSync(topicsPath)) return [];
         const topics = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
 
-        let fileName = topics[topic];
+        let fileName = null;
         
-        // Nếu không có topic cụ thể hoặc không tìm thấy, chọn ngẫu nhiên một chủ đề có sẵn
-        if (!fileName) {
+        if (topicQuery) {
+            // 1. Tìm khớp chính xác
+            fileName = topics[topicQuery];
+
+            // 2. Tìm không phân biệt hoa thường và dấu
+            if (!fileName) {
+                const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
+                const key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()) === normalizedQuery);
+                if (key) fileName = topics[key];
+            }
+
+            // 3. Tìm kiếm theo cụm từ (substring) không dấu
+            if (!fileName) {
+                const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
+                const key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()).includes(normalizedQuery));
+                if (key) fileName = topics[key];
+            }
+        } else {
+            // Không có topic cụ thể -> chọn ngẫu nhiên một chủ đề có sẵn
             const keys = Object.keys(topics);
+            if (keys.length === 0) return [];
             const randomKey = keys[Math.floor(Math.random() * keys.length)];
             fileName = topics[randomKey];
         }
+
+        if (!fileName) return [];
 
         const filePath = path.join(__dirname, '../data', fileName);
         if (!fs.existsSync(filePath)) return [];
@@ -408,6 +432,14 @@ class GameManager {
     }
 
     getSafeMatchState(match) {
+        let availableTopics = [];
+        try {
+            const topicsPath = path.join(__dirname, '../data/topics.json');
+            if (fs.existsSync(topicsPath)) {
+                availableTopics = Object.keys(JSON.parse(fs.readFileSync(topicsPath, 'utf8')));
+            }
+        } catch (e) {}
+
         return {
             id: match.id,
             mode: match.mode,
@@ -419,7 +451,7 @@ class GameManager {
             roundWins: match.roundWins,
             topicChooser: match.topicChooser,
             currentTopic: match.currentTopic,
-            topics: [],
+            topics: availableTopics,
             stars: match.stars,
             failedAttempts: match.failedAttempts
         };
