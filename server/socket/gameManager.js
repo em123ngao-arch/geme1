@@ -11,34 +11,43 @@ function removeAccents(str) {
 
 function getQuestionsFromJSON(count = 5, topicQuery = null) {
     try {
-        const topicsPath = path.join(__dirname, '../data/topics.json');
+        const serverRoot = process.cwd();
+        const topicsPath = path.join(serverRoot, 'data/topics.json');
+        
         if (!fs.existsSync(topicsPath)) {
-            console.warn("topics.json not found at:", topicsPath);
+            const fallbackPath = path.join(__dirname, '../data/topics.json');
+            if (fs.existsSync(fallbackPath)) {
+                return getQuestionsFromJSONWithSpecificPath(fallbackPath, count, topicQuery);
+            }
+            console.warn("topics.json not found at:", topicsPath, "or", fallbackPath);
             return [];
         }
-        const topics = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
+        return getQuestionsFromJSONWithSpecificPath(topicsPath, count, topicQuery);
+    } catch (err) {
+        console.error("Error reading questions from JSON:", err);
+        return [];
+    }
+}
 
+function getQuestionsFromJSONWithSpecificPath(topicsPath, count, topicQuery) {
+    try {
+        const dataDir = path.dirname(topicsPath);
+        const topics = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
         let fileName = null;
         
         if (topicQuery) {
-            // 1. Tìm khớp chính xác
             fileName = topics[topicQuery];
-
-            // 2. Tìm không phân biệt hoa thường và dấu
             if (!fileName) {
                 const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
                 const key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()) === normalizedQuery);
                 if (key) fileName = topics[key];
             }
-
-            // 3. Tìm kiếm theo cụm từ (substring) không dấu
             if (!fileName) {
                 const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
                 const key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()).includes(normalizedQuery));
                 if (key) fileName = topics[key];
             }
         } else {
-            // Không có topic cụ thể -> chọn ngẫu nhiên một chủ đề có sẵn
             const keys = Object.keys(topics);
             if (keys.length === 0) return [];
             const randomKey = keys[Math.floor(Math.random() * keys.length)];
@@ -47,17 +56,16 @@ function getQuestionsFromJSON(count = 5, topicQuery = null) {
 
         if (!fileName) return [];
 
-        const filePath = path.join(__dirname, '../data', fileName);
+        const filePath = path.join(dataDir, fileName);
         if (!fs.existsSync(filePath)) {
             console.warn("Question file not found:", filePath);
             return [];
         }
         const data = fs.readFileSync(filePath, 'utf8');
         const questions = JSON.parse(data);
-        
         return questions.sort(() => 0.5 - Math.random()).slice(0, count);
-    } catch (err) {
-        console.error("Error reading questions from JSON:", err);
+    } catch (e) {
+        console.error("Error in getQuestionsFromJSONWithSpecificPath:", e);
         return [];
     }
 }
@@ -491,7 +499,13 @@ class GameManager {
     getSafeMatchState(match) {
         let availableTopics = [];
         try {
-            const topicsPath = path.join(__dirname, '../data/topics.json');
+            const serverRoot = process.cwd();
+            let topicsPath = path.join(serverRoot, 'data/topics.json');
+            
+            if (!fs.existsSync(topicsPath)) {
+                topicsPath = path.join(__dirname, '../data/topics.json');
+            }
+
             if (fs.existsSync(topicsPath)) {
                 availableTopics = Object.keys(JSON.parse(fs.readFileSync(topicsPath, 'utf8')));
             }
