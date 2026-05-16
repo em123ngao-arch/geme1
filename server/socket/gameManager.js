@@ -481,27 +481,38 @@ class GameManager {
 
         const winner = winnerSocketId ? match.players.find(p => p.socketId === winnerSocketId) : null;
         
+        console.log(`[Match] Finished. Mode: ${match.mode}, Winner: ${winner ? winner.displayName : 'Draw'}`);
+
         // --- Database Persistence ---
         if (this.db) {
             try {
-                const p1Score = match.mode === 1 ? match.scores[p1.socketId] : match.roundWins[p1.socketId];
-                const p2Score = match.mode === 1 ? match.scores[p2.socketId] : match.roundWins[p2.socketId];
-                const winnerDbId = winner ? winner.id : null;
+                const p1 = match.players[0];
+                const p2 = match.players[1];
+                
+                if (!p1.id || !p2.id) {
+                    console.error("[DB] Missing user IDs for match recording!", { p1Id: p1.id, p2Id: p2.id });
+                } else {
+                    const p1Score = match.mode === 1 ? (match.scores[p1.socketId] || 0) : (match.roundWins[p1.socketId] || 0);
+                    const p2Score = match.mode === 1 ? (match.scores[p2.socketId] || 0) : (match.roundWins[p2.socketId] || 0);
+                    const winnerDbId = winner ? winner.id : null;
 
-                // 1. Save match record
-                await this.db.query(
-                    'INSERT INTO matches (mode, p1_id, p2_id, p1_score, p2_score, winner_id) VALUES ($1, $2, $3, $4, $5, $6)',
-                    [match.mode, p1.id, p2.id, p1Score, p2Score, winnerDbId]
-                );
+                    console.log(`[DB] Recording match: P1(${p1.id}) vs P2(${p2.id}), Scores: ${p1Score}-${p2Score}, Winner: ${winnerDbId}`);
 
-                // 2. Update winner's win count
-                if (winnerDbId) {
-                    const winsColumn = match.mode === 1 ? 'wins_mode1' : 'wins_mode2';
+                    // 1. Save match record
                     await this.db.query(
-                        `UPDATE users SET ${winsColumn} = ${winsColumn} + 1 WHERE id = $1`,
-                        [winnerDbId]
+                        'INSERT INTO matches (mode, p1_id, p2_id, p1_score, p2_score, winner_id) VALUES ($1, $2, $3, $4, $5, $6)',
+                        [match.mode, p1.id, p2.id, p1Score, p2Score, winnerDbId]
                     );
-                    console.log(`[DB] Updated leaderboard for user ${winner.displayName} (ID: ${winnerDbId})`);
+
+                    // 2. Update winner's win count
+                    if (winnerDbId) {
+                        const winsColumn = parseInt(match.mode) === 1 ? 'wins_mode1' : 'wins_mode2';
+                        await this.db.query(
+                            `UPDATE users SET ${winsColumn} = COALESCE(${winsColumn}, 0) + 1 WHERE id = $1`,
+                            [winnerDbId]
+                        );
+                        console.log(`[DB] Successfully updated leaderboard for user ID: ${winnerDbId}`);
+                    }
                 }
             } catch (dbErr) {
                 console.error("[DB] Error saving match results:", dbErr);
