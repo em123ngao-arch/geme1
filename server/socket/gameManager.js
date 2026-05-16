@@ -207,6 +207,7 @@ class GameManager {
                     match.questionResolved = true;
                     clearTimeout(match.timerId);
                     match.scores[socket.id] += 2;
+                    this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
                     this.io.to(matchId).emit('answer_result', { winnerId: socket.id, correctIndex: q.a, scores: match.scores, msg: "Đúng với Ngôi sao hy vọng (+2 điểm)!" });
                     setTimeout(() => this.nextQuestion(matchId), 1000);
                 } else {
@@ -220,6 +221,7 @@ class GameManager {
                     match.questionResolved = true;
                     clearTimeout(match.timerId);
                     match.scores[socket.id] += 1;
+                    this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
                     this.io.to(matchId).emit('answer_result', { winnerId: socket.id, correctIndex: q.a, scores: match.scores });
                     setTimeout(() => this.nextQuestion(matchId), 1000);
                 } else {
@@ -233,6 +235,7 @@ class GameManager {
                     } else {
                         // This player failed first -> Opponent gets point automatically
                         match.scores[opponentId] += 1;
+                        this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
                         this.io.to(matchId).emit('answer_result', { winnerId: opponentId, correctIndex: q.a, scores: match.scores, msg: "Trả lời sai! Đối thủ được cộng 1 điểm." });
                     }
                     setTimeout(() => this.nextQuestion(matchId), 1000);
@@ -399,6 +402,9 @@ class GameManager {
         match.currentQuestionIndex++;
         match.questionResolved = false;
         match.failedAttempts = [];
+        
+        // Cập nhật trạng thái trận đấu (số câu hỏi hiện tại) cho client
+        this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
 
         if (match.mode === 1) {
             // Solo mode: First to 3 wins, or max 5 questions
