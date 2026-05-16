@@ -125,32 +125,33 @@ export default function GameUI({ user }) {
             <div>
               <p style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Đến lượt bạn chọn chủ đề!</p>
               
-              {matchState.topics && matchState.topics.length > 0 && (
-                <div style={{ marginBottom: '2rem' }}>
-                  <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.875rem' }}>GỢI Ý TỪ THƯ VIỆN:</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+              <div className="glass-panel" style={{ padding: '2rem', background: 'rgba(255,255,255,0.03)' }}>
+                <h4 style={{ marginBottom: '1.5rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Thư viện chủ đề (Có sẵn)</h4>
+                {matchState.topics && matchState.topics.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                     {matchState.topics.map(t => (
                       <button 
                         key={t} 
                         className="btn btn-outline" 
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', borderRadius: '2rem' }}
+                        style={{ padding: '1rem', fontSize: '0.9rem', height: 'auto', textAlign: 'center' }}
                         onClick={() => handleSelectTopic(t)}
                       >
                         {t}
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p style={{ color: 'var(--text-muted)' }}>Đang tải danh sách...</p>
+                )}
 
-              <div style={{ margin: '1rem 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>— HOẶC TỰ NHẬP CHỦ ĐỀ MỚI —</div>
-
-              <form onSubmit={(e) => { e.preventDefault(); handleSelectTopic(e.target.elements.topic.value); }}>
-                <div className="input-group" style={{ maxWidth: '400px', margin: '0 auto' }}>
-                  <input name="topic" type="text" className="input-field" placeholder="Nhập chủ đề (VD: Toán học, Vũ trụ...)" required />
+                <div style={{ margin: '2rem 0', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem' }}>
+                  <h4 style={{ marginBottom: '1rem', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px' }}>Hoặc tự tạo chủ đề mới (AI)</h4>
+                  <form onSubmit={(e) => { e.preventDefault(); handleSelectTopic(e.target.elements.topic.value); }} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input name="topic" type="text" className="input-field" placeholder="Nhập chủ đề bất kỳ..." required style={{ flex: 1 }} />
+                    <button type="submit" className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>Tạo Đề AI</button>
+                  </form>
                 </div>
-                <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', width: '100%', maxWidth: '400px' }}>Xác Nhận & Tạo Đề</button>
-              </form>
+              </div>
             </div>
           ) : (
             <div style={{ margin: '4rem 0' }}>

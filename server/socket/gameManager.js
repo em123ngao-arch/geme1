@@ -124,9 +124,9 @@ Trả về một mảng JSON có cấu trúc: [{"q": "Câu hỏi?", "options": [
             return randomFallback;
         }
         
-        console.error("[AI] All fallbacks failed. Using dummy questions.");
+        console.error("[AI] All fallbacks failed. Using dummy questions [V2.1].");
         return [
-            { q: `Câu hỏi về ${topic} (Hệ thống AI đang bận)?`, options: ["Đúng", "Sai", "A", "B"], a: 0 },
+            { q: `[V2.1] Câu hỏi về ${topic} (Hệ thống AI đang bận)?`, options: ["Đúng", "Sai", "A", "B"], a: 0 },
             { q: "Thủ đô của Việt Nam là gì?", options: ["Hà Nội", "TP.HCM", "Đà Nẵng", "Huế"], a: 0 },
             { q: "Sông nào dài nhất thế giới?", options: ["Sông Nile", "Sông Amazon", "Sông Mê Kông", "Sông Hồng"], a: 0 },
             { q: "Ngọn núi cao nhất thế giới?", options: ["Everest", "Phan Xi Păng", "K2", "Phú Sĩ"], a: 0 },
