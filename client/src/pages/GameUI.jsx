@@ -86,8 +86,8 @@ export default function GameUI({ user }) {
     socket.emit('submit_answer', { matchId: id, questionIndex: questionData.index, answerIndex: index, useStar });
   };
 
-  const handleSelectTopic = (topic) => {
-    socket.emit('select_topic', { matchId: id, topic });
+  const handleSelectTopic = (topic, difficulty = "bình thường") => {
+    socket.emit('select_topic', { matchId: id, topic, difficulty });
   };
 
   if (matchFinished) {
@@ -146,10 +146,15 @@ export default function GameUI({ user }) {
 
                 <div style={{ margin: '2rem 0', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem' }}>
                   <h4 style={{ marginBottom: '1rem', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px' }}>Hoặc tự tạo chủ đề mới (AI)</h4>
-                  <form onSubmit={(e) => { e.preventDefault(); handleSelectTopic(e.target.elements.topic.value); }} style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input name="topic" type="text" className="input-field" placeholder="Nhập chủ đề bất kỳ..." required style={{ flex: 1 }} />
-                    <button type="submit" className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>Tạo Đề AI</button>
-                  </form>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <input id="ai-topic-input" type="text" className="input-field" placeholder="Nhập chủ đề bất kỳ (VD: Worldcup 2022, K-Pop...)" required style={{ width: '100%' }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                      <button className="btn btn-outline" style={{ fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => { const val = document.getElementById('ai-topic-input').value; if(val) handleSelectTopic(val, 'dễ'); }}>Dễ</button>
+                      <button className="btn btn-outline" style={{ fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => { const val = document.getElementById('ai-topic-input').value; if(val) handleSelectTopic(val, 'bình thường'); }}>Bình thường</button>
+                      <button className="btn btn-primary" style={{ fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => { const val = document.getElementById('ai-topic-input').value; if(val) handleSelectTopic(val, 'khó'); }}>Khó</button>
+                      <button className="btn btn-accent" style={{ fontSize: '0.8rem', padding: '0.5rem' }} onClick={() => { const val = document.getElementById('ai-topic-input').value; if(val) handleSelectTopic(val, 'siêu khó'); }}>Siêu khó</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -212,16 +217,26 @@ export default function GameUI({ user }) {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-            Vòng {matchState.round} {matchState.mode === 2 && `/ 3`}
+        <div className="stats-container">
+          <div className="stat-item">
+            <span className="stat-label">Điểm số</span>
+            <span className="stat-value highlight">{scores[me.socketId]} - {scores[opponent.socketId]}</span>
           </div>
-          {matchState.currentTopic && (
-            <div style={{ fontSize: '0.875rem', color: 'var(--accent)', marginTop: '0.25rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Chủ đề: {matchState.currentTopic}
-            </div>
-          )}
+          <div className="stat-item">
+            <span className="stat-label">Câu hỏi</span>
+            <span className="stat-value">{matchState.currentQuestionIndex >= 0 ? matchState.currentQuestionIndex + 1 : 1} / 5</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Vòng chơi</span>
+            <span className="stat-value">{matchState.round} {matchState.mode === 2 && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>/ 3</span>}</span>
+          </div>
         </div>
+        
+        {matchState.currentTopic && (
+          <div style={{ position: 'absolute', top: '5.5rem', left: '50%', transform: 'translateX(-50%)', fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', background: 'rgba(139, 92, 246, 0.1)', padding: '0.25rem 1rem', borderRadius: '4px' }}>
+            {matchState.currentTopic}
+          </div>
+        )}
 
         <div className="score-board">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexDirection: 'row-reverse', textAlign: 'right' }}>

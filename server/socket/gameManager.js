@@ -36,17 +36,10 @@ function getQuestionsFromJSONWithSpecificPath(topicsPath, count, topicQuery) {
         let fileName = null;
         
         if (topicQuery) {
-            fileName = topics[topicQuery];
-            if (!fileName) {
-                const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
-                const key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()) === normalizedQuery);
-                if (key) fileName = topics[key];
-            }
-            if (!fileName) {
-                const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
-                const key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()).includes(normalizedQuery));
-                if (key) fileName = topics[key];
-            }
+            const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
+            // Try exact match first
+            let key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()) === normalizedQuery);
+            if (key) fileName = topics[key];
         } else {
             const keys = Object.keys(topics);
             if (keys.length === 0) return [];
@@ -70,29 +63,15 @@ function getQuestionsFromJSONWithSpecificPath(topicsPath, count, topicQuery) {
     }
 }
 
-async function generateQuestionsFromAI(topic, forceAI = false) {
-    console.log(`[AI] Request for topic: "${topic}" (forceAI: ${forceAI})`);
+async function generateQuestionsFromAI(topic, difficulty = "bình thường") {
+    console.log(`[AI] Generating questions for: "${topic}" (Difficulty: ${difficulty})`);
     
     if (!process.env.GEMINI_API_KEY) {
-        console.error("[AI] CRITICAL: GEMINI_API_KEY is missing from environment variables!");
-        forceAI = false; // Cannot use AI without key
-    }
-
-    // Nếu không bắt buộc AI, ưu tiên lấy từ JSON trước
-    if (!forceAI) {
-        const localQuestions = getQuestionsFromJSON(5, topic);
-        if (localQuestions && localQuestions.length >= 5) {
-            console.log(`[AI] Using ${localQuestions.length} questions from local JSON for "${topic}"`);
-            return localQuestions;
-        }
-        console.log(`[AI] Local JSON not found/insufficient for "${topic}". Falling back to AI...`);
-    } else {
-        console.log(`[AI] Forced AI generation for "${topic}"`);
+        console.error("[AI] CRITICAL: GEMINI_API_KEY is missing!");
+        return []; // Caller will handle fallback
     }
 
     try {
-        if (!process.env.GEMINI_API_KEY) throw new Error("Missing API Key");
-
         const model = ai.getGenerativeModel({ 
             model: "gemini-1.5-flash",
             generationConfig: {
@@ -100,15 +79,18 @@ async function generateQuestionsFromAI(topic, forceAI = false) {
             }
         });
 
-        const prompt = `Tạo 5 câu hỏi trắc nghiệm cực khó, lắt léo về chủ đề "${topic}" bằng tiếng Việt.
-Trả về một mảng JSON có cấu trúc: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`;
+        const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm. 
+Hãy tạo đúng 5 câu hỏi trắc nghiệm về chủ đề cụ thể: "${topic}".
+Yêu cầu:
+1. Độ khó: ${difficulty}.
+2. Ngôn ngữ: Tiếng Việt.
+3. Nội dung phải chính xác, lôi cuốn và tập trung duy nhất vào "${topic}".
+4. Trả về một mảng JSON: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let text = response.text();
-        console.log("[AI] Response received successfully for:", topic);
         
-        // Làm sạch dữ liệu nếu cần
         if (text.includes('```json')) {
             text = text.split('```json')[1].split('```')[0].trim();
         } else if (text.includes('```')) {
@@ -116,30 +98,11 @@ Trả về một mảng JSON có cấu trúc: [{"q": "Câu hỏi?", "options": [
         }
 
         const data = JSON.parse(text);
-        if (!Array.isArray(data) || data.length < 5) throw new Error("Invalid format or insufficient questions from AI");
+        if (!Array.isArray(data) || data.length < 5) throw new Error("Invalid format or insufficient questions");
         return data.slice(0, 5);
     } catch (err) {
         console.error(`[AI] Error generating for "${topic}":`, err.message);
-        
-        // Nếu AI lỗi, CỐ GẮNG lấy từ JSON (kể cả khi trước đó đã force AI)
-        console.log(`[AI] Attempting JSON fallback for "${topic}" due to AI error...`);
-        const fallbackWithTopic = getQuestionsFromJSON(5, topic);
-        if (fallbackWithTopic.length >= 5) return fallbackWithTopic;
-
-        const randomFallback = getQuestionsFromJSON(5);
-        if (randomFallback.length > 0) {
-            console.log("[AI] Using random topic from JSON as last resort");
-            return randomFallback;
-        }
-        
-        console.error("[AI] All fallbacks failed. Using dummy questions [V2.1].");
-        return [
-            { q: `[V2.1] Câu hỏi về ${topic} (Hệ thống AI đang bận)?`, options: ["Đúng", "Sai", "A", "B"], a: 0 },
-            { q: "Thủ đô của Việt Nam là gì?", options: ["Hà Nội", "TP.HCM", "Đà Nẵng", "Huế"], a: 0 },
-            { q: "Sông nào dài nhất thế giới?", options: ["Sông Nile", "Sông Amazon", "Sông Mê Kông", "Sông Hồng"], a: 0 },
-            { q: "Ngọn núi cao nhất thế giới?", options: ["Everest", "Phan Xi Păng", "K2", "Phú Sĩ"], a: 0 },
-            { q: "Hành tinh nào gần Mặt trời nhất?", options: ["Sao Thủy", "Sao Kim", "Trái Đất", "Sao Hỏa"], a: 0 },
-        ];
+        return []; // Fail gracefully, caller handles fallback
     }
 }
 
@@ -276,36 +239,68 @@ class GameManager {
             }
         });
 
-        socket.on('select_topic', async ({ matchId, topic }) => {
+        socket.on('select_topic', async ({ matchId, topic, difficulty: explicitDifficulty }) => {
             const match = this.matches.get(matchId);
             if (!match || match.status !== 'waiting_topic') return;
-            // Ensure correct player is choosing
             if (match.topicChooser !== socket.id) return;
 
-            match.currentTopic = topic;
+            let finalTopic = topic.trim();
+            let difficulty = explicitDifficulty || "bình thường";
+            
+            // Fallback: Extract difficulty hint if not explicitly provided
+            if (!explicitDifficulty) {
+                const lowerTopic = finalTopic.toLowerCase();
+                if (lowerTopic.includes(' cực khó') || lowerTopic.includes(' rất khó')) {
+                    difficulty = "cực khó, lắt léo";
+                    finalTopic = finalTopic.replace(/ cực khó| rất khó/gi, '').trim();
+                } else if (lowerTopic.includes(' khó')) {
+                    difficulty = "khó";
+                    finalTopic = finalTopic.replace(/ khó/gi, '').trim();
+                } else if (lowerTopic.includes(' dễ')) {
+                    difficulty = "dễ, cơ bản";
+                    finalTopic = finalTopic.replace(/ dễ/gi, '').trim();
+                }
+            } else {
+                // Ensure common terms are mapped to descriptive ones for AI
+                if (difficulty === 'siêu khó') difficulty = 'siêu khó, cực kỳ lắt léo và chuyên sâu';
+                if (difficulty === 'dễ') difficulty = 'dễ, kiến thức cơ bản';
+            }
+
+            match.currentTopic = topic; // Show full original input as topic name in UI
             match.status = 'generating';
             this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
 
-            // Kiểm tra xem topic có trong danh sách JSON không (sử dụng logic khớp tên linh hoạt)
-            let isKnownTopic = false;
-            try {
-                const topicsPath = path.join(__dirname, '../data/topics.json');
-                if (fs.existsSync(topicsPath)) {
-                    const topicsList = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
-                    const normalizedQuery = removeAccents(topic.toLowerCase().trim());
-                    isKnownTopic = Object.keys(topicsList).some(k => 
-                        k.toLowerCase() === topic.toLowerCase().trim() || 
-                        removeAccents(k.toLowerCase()) === normalizedQuery
-                    );
-                }
-            } catch (e) {
-                console.error("Error checking topics list:", e);
+            // Strict JSON check: Only if exact match and NO difficulty hint was provided
+            let useJSON = false;
+            if (topic.trim() === finalTopic) { // No difficulty keywords were removed
+                try {
+                    const topicsPath = path.join(__dirname, '../data/topics.json');
+                    if (fs.existsSync(topicsPath)) {
+                        const topicsList = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
+                        useJSON = Object.keys(topicsList).some(k => k.toLowerCase() === finalTopic.toLowerCase());
+                    }
+                } catch (e) {}
             }
 
-            // Nếu là topic lạ (tự nhập) -> Dùng AI. Nếu là topic quen -> Ưu tiên JSON.
-            match.questions = await generateQuestionsFromAI(topic, !isKnownTopic);
-            match.currentQuestionIndex = -1;
+            let questions = [];
+            if (useJSON) {
+                console.log(`[Game] Using exact match JSON for topic: "${finalTopic}"`);
+                questions = getQuestionsFromJSON(5, finalTopic);
+            }
 
+            if (questions.length < 5) {
+                console.log(`[Game] Triggering AI for topic: "${finalTopic}" (Difficulty: ${difficulty})`);
+                questions = await generateQuestionsFromAI(finalTopic, difficulty);
+            }
+
+            // Final fallback if AI fails
+            if (questions.length < 5) {
+                console.log(`[Game] AI failed, falling back to random JSON questions`);
+                questions = getQuestionsFromJSON(5);
+            }
+
+            match.questions = questions;
+            match.currentQuestionIndex = -1;
             this.startCountdown(matchId);
         });
     }
@@ -522,6 +517,7 @@ class GameManager {
             roundWins: match.roundWins,
             topicChooser: match.topicChooser,
             currentTopic: match.currentTopic,
+            currentQuestionIndex: match.currentQuestionIndex,
             topics: availableTopics,
             stars: match.stars,
             failedAttempts: match.failedAttempts

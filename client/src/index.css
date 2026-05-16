@@ -301,6 +301,7 @@ h1, h2, h3, h4 {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
+  position: relative;
 }
 
 .score-board {
@@ -308,6 +309,53 @@ h1, h2, h3, h4 {
   gap: 2rem;
   font-size: 1.5rem;
   font-weight: bold;
+}
+
+.stats-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.stat-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -0.75rem;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.125rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-value.highlight {
+  color: var(--primary);
 }
 
 .timer-bar-container {
