@@ -63,21 +63,28 @@ function getQuestionsFromJSON(count = 5, topicQuery = null) {
 }
 
 async function generateQuestionsFromAI(topic, forceAI = false) {
-    console.log(`Generating questions for topic: "${topic}" (forceAI: ${forceAI})`);
+    console.log(`[AI] Request for topic: "${topic}" (forceAI: ${forceAI})`);
     
+    if (!process.env.GEMINI_API_KEY) {
+        console.error("[AI] CRITICAL: GEMINI_API_KEY is missing from environment variables!");
+        forceAI = false; // Cannot use AI without key
+    }
+
     // Nếu không bắt buộc AI, ưu tiên lấy từ JSON trước
     if (!forceAI) {
         const localQuestions = getQuestionsFromJSON(5, topic);
         if (localQuestions && localQuestions.length >= 5) {
-            console.log(`Using ${localQuestions.length} questions from local JSON for "${topic}"`);
+            console.log(`[AI] Using ${localQuestions.length} questions from local JSON for "${topic}"`);
             return localQuestions;
         }
-        console.log(`Local JSON not found or insufficient for "${topic}". Falling back to AI...`);
+        console.log(`[AI] Local JSON not found/insufficient for "${topic}". Falling back to AI...`);
     } else {
-        console.log(`Forced AI generation for "${topic}"`);
+        console.log(`[AI] Forced AI generation for "${topic}"`);
     }
 
     try {
+        if (!process.env.GEMINI_API_KEY) throw new Error("Missing API Key");
+
         const model = ai.getGenerativeModel({ 
             model: "gemini-1.5-flash",
             generationConfig: {
@@ -85,14 +92,15 @@ async function generateQuestionsFromAI(topic, forceAI = false) {
             }
         });
 
-        const result = await model.generateContent(`Tạo 5 câu hỏi trắc nghiệm cực khó, lắt léo về chủ đề "${topic}" bằng tiếng Việt.
-Trả về một mảng JSON có cấu trúc: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`);
+        const prompt = `Tạo 5 câu hỏi trắc nghiệm cực khó, lắt léo về chủ đề "${topic}" bằng tiếng Việt.
+Trả về một mảng JSON có cấu trúc: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`;
 
+        const result = await model.generateContent(prompt);
         const response = await result.response;
         let text = response.text();
-        console.log("AI Response received for topic:", topic);
+        console.log("[AI] Response received successfully for:", topic);
         
-        // Làm sạch dữ liệu nếu cần (trong trường hợp responseMimeType không hoạt động như ý)
+        // Làm sạch dữ liệu nếu cần
         if (text.includes('```json')) {
             text = text.split('```json')[1].split('```')[0].trim();
         } else if (text.includes('```')) {
@@ -103,20 +111,26 @@ Trả về một mảng JSON có cấu trúc: [{"q": "Câu hỏi?", "options": [
         if (!Array.isArray(data) || data.length < 5) throw new Error("Invalid format or insufficient questions from AI");
         return data.slice(0, 5);
     } catch (err) {
-        console.error("AI Generation Error for topic:", topic, err);
-        // Nếu AI lỗi, lấy ngẫu nhiên từ JSON làm fallback
-        const fallback = getQuestionsFromJSON(5);
-        if (fallback.length > 0) {
-            console.log("Using random fallback from JSON due to AI error");
-            return fallback;
+        console.error(`[AI] Error generating for "${topic}":`, err.message);
+        
+        // Nếu AI lỗi, CỐ GẮNG lấy từ JSON (kể cả khi trước đó đã force AI)
+        console.log(`[AI] Attempting JSON fallback for "${topic}" due to AI error...`);
+        const fallbackWithTopic = getQuestionsFromJSON(5, topic);
+        if (fallbackWithTopic.length >= 5) return fallbackWithTopic;
+
+        const randomFallback = getQuestionsFromJSON(5);
+        if (randomFallback.length > 0) {
+            console.log("[AI] Using random topic from JSON as last resort");
+            return randomFallback;
         }
         
+        console.error("[AI] All fallbacks failed. Using dummy questions.");
         return [
-            { q: `Câu hỏi mẫu về ${topic} (Do lỗi kết nối AI)?`, options: ["Đúng", "Sai", "A", "B"], a: 0 },
-            { q: "1 + 1 bằng mấy?", options: ["2", "3", "4", "5"], a: 0 },
-            { q: "Màu của bầu trời là?", options: ["Xanh", "Đỏ", "Tím", "Vàng"], a: 0 },
-            { q: "Động vật nào kêu meo meo?", options: ["Mèo", "Chó", "Lợn", "Gà"], a: 0 },
-            { q: "Thủ đô của Việt Nam?", options: ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Cần Thơ"], a: 0 },
+            { q: `Câu hỏi về ${topic} (Hệ thống AI đang bận)?`, options: ["Đúng", "Sai", "A", "B"], a: 0 },
+            { q: "Thủ đô của Việt Nam là gì?", options: ["Hà Nội", "TP.HCM", "Đà Nẵng", "Huế"], a: 0 },
+            { q: "Sông nào dài nhất thế giới?", options: ["Sông Nile", "Sông Amazon", "Sông Mê Kông", "Sông Hồng"], a: 0 },
+            { q: "Ngọn núi cao nhất thế giới?", options: ["Everest", "Phan Xi Păng", "K2", "Phú Sĩ"], a: 0 },
+            { q: "Hành tinh nào gần Mặt trời nhất?", options: ["Sao Thủy", "Sao Kim", "Trái Đất", "Sao Hỏa"], a: 0 },
         ];
     }
 }
