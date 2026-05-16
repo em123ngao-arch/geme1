@@ -274,9 +274,11 @@ class GameManager {
             match.status = 'generating';
             this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
 
-            // Strict JSON check: Only if exact match and NO difficulty hint was provided
+            // Dùng JSON chỉ khi: Chủ đề khớp chính xác VÀ người dùng KHÔNG chọn mức độ cụ thể nào
+            // Nếu người dùng chọn mức độ khó/dễ/siêu khó, luôn dùng AI để tạo đề phù hợp
+            const isDefaultDifficulty = !explicitDifficulty || explicitDifficulty === 'bình thường';
             let useJSON = false;
-            if (topic.trim() === finalTopic) { // No difficulty keywords were removed
+            if (isDefaultDifficulty) {
                 try {
                     const topicsPath = path.join(__dirname, '../data/topics.json');
                     if (fs.existsSync(topicsPath)) {
@@ -288,18 +290,18 @@ class GameManager {
 
             let questions = [];
             if (useJSON) {
-                console.log(`[Game] Using exact match JSON for topic: "${finalTopic}"`);
+                console.log(`[Game] Chủ đề khớp JSON, dùng file có sẵn: "${finalTopic}"`);
                 questions = getQuestionsFromJSON(5, finalTopic);
             }
 
             if (questions.length < 5) {
-                console.log(`[Game] Triggering AI for topic: "${finalTopic}" (Difficulty: ${difficulty})`);
+                console.log(`[Game] Gọi AI tạo đề: "${finalTopic}" (Mức độ: ${difficulty})`);
                 questions = await generateQuestionsFromAI(finalTopic, difficulty);
             }
 
-            // Final fallback if AI fails
+            // Fallback cuối cùng nếu AI thất bại
             if (questions.length < 5) {
-                console.log(`[Game] AI failed, falling back to random JSON questions`);
+                console.log(`[Game] AI thất bại, lấy câu hỏi ngẫu nhiên từ JSON`);
                 questions = getQuestionsFromJSON(5);
             }
 
