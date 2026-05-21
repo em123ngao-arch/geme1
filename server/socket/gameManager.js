@@ -1,66 +1,12 @@
 require('dotenv').config();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const fs = require('fs');
 const path = require('path');
 
 function removeAccents(str) {
     return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
-}
-
-function getQuestionsFromJSON(count = 5, topicQuery = null) {
-    try {
-        const serverRoot = process.cwd();
-        const topicsPath = path.join(serverRoot, 'data/topics.json');
-        
-        if (!fs.existsSync(topicsPath)) {
-            const fallbackPath = path.join(__dirname, '../data/topics.json');
-            if (fs.existsSync(fallbackPath)) {
-                return getQuestionsFromJSONWithSpecificPath(fallbackPath, count, topicQuery);
-            }
-            console.warn("topics.json not found at:", topicsPath, "or", fallbackPath);
-            return [];
-        }
-        return getQuestionsFromJSONWithSpecificPath(topicsPath, count, topicQuery);
-    } catch (err) {
-        console.error("Error reading questions from JSON:", err);
-        return [];
-    }
-}
-
-function getQuestionsFromJSONWithSpecificPath(topicsPath, count, topicQuery) {
-    try {
-        const dataDir = path.dirname(topicsPath);
-        const topics = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
-        let fileName = null;
-        
-        if (topicQuery) {
-            const normalizedQuery = removeAccents(topicQuery.toLowerCase().trim());
-            // Try exact match first
-            let key = Object.keys(topics).find(k => removeAccents(k.toLowerCase()) === normalizedQuery);
-            if (key) fileName = topics[key];
-        } else {
-            const keys = Object.keys(topics);
-            if (keys.length === 0) return [];
-            const randomKey = keys[Math.floor(Math.random() * keys.length)];
-            fileName = topics[randomKey];
-        }
-
-        if (!fileName) return [];
-
-        const filePath = path.join(dataDir, fileName);
-        if (!fs.existsSync(filePath)) {
-            console.warn("Question file not found:", filePath);
-            return [];
-        }
-        const data = fs.readFileSync(filePath, 'utf8');
-        const questions = JSON.parse(data);
-        return questions.sort(() => 0.5 - Math.random()).slice(0, count);
-    } catch (e) {
-        console.error("Error in getQuestionsFromJSONWithSpecificPath:", e);
-        return [];
-    }
 }
 
 async function generateQuestionsFromAI(topic, difficulty = "bình thường") {
@@ -72,13 +18,6 @@ async function generateQuestionsFromAI(topic, difficulty = "bình thường") {
     }
 
     try {
-        const model = ai.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json",
-            }
-        });
-
         const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm. 
 Hãy tạo đúng 5 câu hỏi trắc nghiệm về chủ đề cụ thể: "${topic}".
 Yêu cầu:
@@ -87,9 +26,15 @@ Yêu cầu:
 3. Nội dung phải chính xác, lôi cuốn và tập trung duy nhất vào "${topic}".
 4. Trả về một mảng JSON: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text();
+        const response = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
+
+        let text = response.text;
         
         if (text.includes('```json')) {
             text = text.split('```json')[1].split('```')[0].trim();
@@ -117,6 +62,62 @@ class GameManager {
         this.queueMode1 = []; // socket.id
         this.queueMode2 = []; // socket.id
         this.matches = new Map(); // matchId -> matchState
+        
+        // Cache câu hỏi toàn cục để đáp ứng nhanh (Hybrid Cache)
+        this.questionsCache = {}; 
+        this.loadQuestionsToCache();
+    }
+
+    async loadQuestionsToCache() {
+        if (!this.db) {
+            console.warn("⚠️ [Cache] Kết nối Database Supabase không khả dụng.");
+            return;
+        }
+        try {
+            console.log("⚡ [Cache] Đang tải toàn bộ câu hỏi từ Supabase vào RAM...");
+            const res = await this.db.query('SELECT * FROM questions');
+            
+            this.questionsCache = {};
+            
+            res.rows.forEach(row => {
+                const topicName = row.topic.trim();
+                const topicLower = topicName.toLowerCase();
+                
+                if (!this.questionsCache[topicLower]) {
+                    this.questionsCache[topicLower] = {
+                        name: topicName,
+                        list: []
+                    };
+                }
+                
+                this.questionsCache[topicLower].list.push({
+                    q: row.q,
+                    options: row.options,
+                    a: row.a,
+                    difficulty: row.difficulty
+                });
+            });
+            
+            const summary = Object.keys(this.questionsCache).map(k => {
+                return `"${this.questionsCache[k].name}": ${this.questionsCache[k].list.length} câu`;
+            }).join(', ');
+            
+            console.log(`⚡ [Cache] Đã đồng bộ câu hỏi vào RAM thành công! (${summary})`);
+        } catch (err) {
+            console.error("❌ [Cache] Lỗi khi tải câu hỏi từ Supabase vào RAM:", err.message);
+        }
+    }
+
+    getQuestionsFromCache(topic, count = 5) {
+        const topicLower = topic.toLowerCase().trim();
+        const cacheEntry = this.questionsCache[topicLower];
+        if (!cacheEntry || !cacheEntry.list || cacheEntry.list.length === 0) {
+            console.warn(`⚠️ [Cache] Không tìm thấy câu hỏi cho chủ đề: "${topic}"`);
+            return [];
+        }
+        // Trộn ngẫu nhiên câu hỏi
+        const shuffled = [...cacheEntry.list].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
     }
 
     handleConnection(socket) {
@@ -251,7 +252,7 @@ class GameManager {
             let finalTopic = topic.trim();
             let difficulty = explicitDifficulty || "bình thường";
             
-            // Fallback: Extract difficulty hint if not explicitly provided
+            // Fallback: Trích xuất độ khó từ gợi ý tiêu đề nếu không được chọn trực tiếp
             if (!explicitDifficulty) {
                 const lowerTopic = finalTopic.toLowerCase();
                 if (lowerTopic.includes(' cực khó') || lowerTopic.includes(' rất khó')) {
@@ -265,44 +266,42 @@ class GameManager {
                     finalTopic = finalTopic.replace(/ dễ/gi, '').trim();
                 }
             } else {
-                // Ensure common terms are mapped to descriptive ones for AI
                 if (difficulty === 'siêu khó') difficulty = 'siêu khó, cực kỳ lắt léo và chuyên sâu';
                 if (difficulty === 'dễ') difficulty = 'dễ, kiến thức cơ bản';
             }
 
-            match.currentTopic = topic; // Show full original input as topic name in UI
+            match.currentTopic = topic;
             match.status = 'generating';
             this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
 
-            // Dùng JSON chỉ khi: Chủ đề khớp chính xác VÀ người dùng KHÔNG chọn mức độ cụ thể nào
-            // Nếu người dùng chọn mức độ khó/dễ/siêu khó, luôn dùng AI để tạo đề phù hợp
+            // Chỉ dùng câu hỏi từ Cache nếu người dùng chọn độ khó mặc định
             const isDefaultDifficulty = !explicitDifficulty || explicitDifficulty === 'bình thường';
-            let useJSON = false;
+            let useCache = false;
             if (isDefaultDifficulty) {
-                try {
-                    const topicsPath = path.join(__dirname, '../data/topics.json');
-                    if (fs.existsSync(topicsPath)) {
-                        const topicsList = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
-                        useJSON = Object.keys(topicsList).some(k => k.toLowerCase() === finalTopic.toLowerCase());
-                    }
-                } catch (e) {}
+                const topicLower = finalTopic.toLowerCase().trim();
+                useCache = !!this.questionsCache[topicLower];
             }
 
             let questions = [];
-            if (useJSON) {
-                console.log(`[Game] Chủ đề khớp JSON, dùng file có sẵn: "${finalTopic}"`);
-                questions = getQuestionsFromJSON(5, finalTopic);
+            if (useCache) {
+                console.log(`[Game] Chủ đề khớp cache, lấy từ RAM: "${finalTopic}"`);
+                questions = this.getQuestionsFromCache(finalTopic, 5);
             }
 
+            // Nếu không có trong cache hoặc chọn độ khó khác, dùng AI để sinh đề
             if (questions.length < 5) {
                 console.log(`[Game] Gọi AI tạo đề: "${finalTopic}" (Mức độ: ${difficulty})`);
                 questions = await generateQuestionsFromAI(finalTopic, difficulty);
             }
 
-            // Fallback cuối cùng nếu AI thất bại
+            // Fallback cuối cùng nếu AI thất bại: Lấy ngẫu nhiên từ Cache
             if (questions.length < 5) {
-                console.log(`[Game] AI thất bại, lấy câu hỏi ngẫu nhiên từ JSON`);
-                questions = getQuestionsFromJSON(5);
+                console.log(`[Game] AI thất bại, lấy câu hỏi ngẫu nhiên từ Cache RAM`);
+                const cacheKeys = Object.keys(this.questionsCache);
+                if (cacheKeys.length > 0) {
+                    const randomKey = cacheKeys[Math.floor(Math.random() * cacheKeys.length)];
+                    questions = this.getQuestionsFromCache(randomKey, 5);
+                }
             }
 
             match.questions = questions;
@@ -330,13 +329,12 @@ class GameManager {
         const p1User = { ...this.onlineUsers.get(p1), socketId: p1 };
         const p2User = { ...this.onlineUsers.get(p2), socketId: p2 };
 
+        // Lấy danh sách các chủ đề đang có trong Cache RAM làm chủ đề ngẫu nhiên ban đầu
         let availableTopics = ['Lịch sử Việt Nam', 'Địa lý Việt Nam', 'Văn học Việt Nam', 'Khoa học', 'Thể thao'];
-        try {
-            const topicsPath = path.join(__dirname, '../data/topics.json');
-            if (fs.existsSync(topicsPath)) {
-                availableTopics = Object.keys(JSON.parse(fs.readFileSync(topicsPath, 'utf8')));
-            }
-        } catch (e) {}
+        const cacheKeys = Object.keys(this.questionsCache);
+        if (cacheKeys.length > 0) {
+            availableTopics = cacheKeys.map(k => this.questionsCache[k].name);
+        }
         
         const randomTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
 
@@ -349,8 +347,8 @@ class GameManager {
             status: 'waiting_ready',
             currentQuestionIndex: -1,
             currentTopic: randomTopic,
-            questions: [], // generated later
-            prefetchedQuestions: null, // to speed up start
+            questions: [], 
+            prefetchedQuestions: null, 
             round: 1,
             roundWins: { [p1]: 0, [p2]: 0 },
             topicChooser: null,
@@ -359,11 +357,9 @@ class GameManager {
         };
 
         if (mode === 1 || mode === 2) {
-            // Vòng 1 luôn dùng AI tạo đề theo yêu cầu
-            generateQuestionsFromAI(randomTopic, true).then(q => {
-                const m = this.matches.get(matchId);
-                if (m) m.prefetchedQuestions = q;
-            });
+            // Lấy ngay 5 câu hỏi ngẫu nhiên từ Cache để trận đấu bắt đầu tức thì (0ms)
+            const q = this.getQuestionsFromCache(randomTopic, 5);
+            match.prefetchedQuestions = q;
         }
 
         this.matches.set(matchId, match);
@@ -541,19 +537,12 @@ class GameManager {
     }
 
     getSafeMatchState(match) {
-        let availableTopics = [];
-        try {
-            const serverRoot = process.cwd();
-            let topicsPath = path.join(serverRoot, 'data/topics.json');
-            
-            if (!fs.existsSync(topicsPath)) {
-                topicsPath = path.join(__dirname, '../data/topics.json');
-            }
-
-            if (fs.existsSync(topicsPath)) {
-                availableTopics = Object.keys(JSON.parse(fs.readFileSync(topicsPath, 'utf8')));
-            }
-        } catch (e) {}
+        // Lấy danh sách các chủ đề khả dụng trực tiếp từ Cache RAM
+        let availableTopics = ['Lịch sử Việt Nam', 'Địa lý Việt Nam', 'Văn học Việt Nam', 'Khoa học', 'Thể thao'];
+        const cacheKeys = Object.keys(this.questionsCache);
+        if (cacheKeys.length > 0) {
+            availableTopics = cacheKeys.map(k => this.questionsCache[k].name);
+        }
 
         return {
             id: match.id,

@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 // Sử dụng biến môi trường DATABASE_URL để kết nối
 const pool = new Pool({
@@ -47,6 +47,27 @@ const initDb = async () => {
         winner_id INTEGER REFERENCES users(id),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Tạo bảng questions
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS questions (
+        id SERIAL PRIMARY KEY,
+        topic TEXT NOT NULL,
+        q TEXT NOT NULL,
+        options TEXT[] NOT NULL,
+        a INTEGER NOT NULL,
+        difficulty TEXT DEFAULT 'bình thường',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Tạo các index cho bảng questions để tăng tốc độ tìm kiếm
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_questions_topic ON questions(topic);
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_questions_difficulty ON questions(difficulty);
     `);
 
     console.log('Supabase tables ready!');
