@@ -161,12 +161,15 @@ export default function Lobby({ user, onLogout }) {
           <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Kênh Chat Chung</h3>
           <div className="chat-box" style={{ flex: 1 }}>
             <div className="chat-messages">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className="chat-message">
-                  <div className="sender">{msg.sender}</div>
-                  <div>{msg.text}</div>
-                </div>
-              ))}
+              {chatMessages.map((msg, i) => {
+                const isMe = msg.senderId ? msg.senderId === user.id : msg.sender === user.displayName;
+                return (
+                  <div key={i} className={`chat-message ${isMe ? 'me' : 'other'}`}>
+                    {!isMe && <div className="sender">{msg.sender}</div>}
+                    <div>{msg.text}</div>
+                  </div>
+                );
+              })}
               <div ref={chatEndRef} />
             </div>
             <form className="chat-input-area" onSubmit={sendMessage}>

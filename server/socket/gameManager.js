@@ -156,6 +156,7 @@ class GameManager {
 
         socket.on('chat_message', (msg) => {
             this.io.emit('chat_message', {
+                senderId: socket.user.id,
                 sender: socket.user.displayName,
                 text: msg,
                 time: new Date().toISOString()

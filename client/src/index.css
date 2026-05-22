@@ -209,17 +209,43 @@ h1, h2, h3, h4 {
 }
 
 .chat-message {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  background: rgba(255,255,255,0.05);
-  align-self: flex-start;
-  max-width: 80%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 1rem;
+  max-width: 75%;
+  line-height: 1.4;
+  font-size: 0.925rem;
+  word-break: break-word;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: messageFadeIn 0.2s ease-out;
 }
 
-.chat-message .sender {
+@keyframes messageFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-message.me {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.chat-message.other {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  border-bottom-left-radius: 0.25rem;
+}
+
+.chat-message.other .sender {
   font-size: 0.75rem;
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.25rem;
 }
 
