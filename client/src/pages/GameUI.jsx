@@ -273,28 +273,11 @@ export default function GameUI({ user }) {
 
           {/* Modal chọn độ khó cao cấp */}
           {activeTopic && (
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(8px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-              animation: 'fadeIn 0.2s ease-out'
-            }}>
-              <div className="glass-panel" style={{
+            <div className="modal-overlay">
+              <div className="modal-content glass-panel" style={{
                 width: '90%',
                 maxWidth: '450px',
-                padding: '2.5rem',
-                textAlign: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-                animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                textAlign: 'center'
               }}>
                 <h3 style={{ fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--primary)' }}>Chọn độ khó</h3>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1rem' }}>
@@ -305,13 +288,8 @@ export default function GameUI({ user }) {
                   
                   {/* Cổng Dễ */}
                   <button 
-                    className="btn btn-outline" 
+                    className="btn btn-outline difficulty-btn" 
                     style={{ 
-                      padding: '1rem 1.25rem', 
-                      fontSize: '1rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
                       borderColor: 'rgba(16, 185, 129, 0.3)',
                       background: 'rgba(16, 185, 129, 0.05)',
                       color: 'var(--success)'
@@ -329,13 +307,8 @@ export default function GameUI({ user }) {
 
                   {/* Cổng Trung bình */}
                   <button 
-                    className="btn btn-outline" 
+                    className="btn btn-outline difficulty-btn" 
                     style={{ 
-                      padding: '1rem 1.25rem', 
-                      fontSize: '1rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
                       borderColor: 'rgba(245, 158, 11, 0.3)',
                       background: 'rgba(245, 158, 11, 0.05)',
                       color: 'var(--warning)'
@@ -353,13 +326,8 @@ export default function GameUI({ user }) {
 
                   {/* Cổng Khó */}
                   <button 
-                    className="btn btn-outline" 
+                    className="btn btn-outline difficulty-btn" 
                     style={{ 
-                      padding: '1rem 1.25rem', 
-                      fontSize: '1rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
                       borderColor: 'rgba(239, 68, 68, 0.3)',
                       background: 'rgba(239, 68, 68, 0.05)',
                       color: 'var(--danger)'
@@ -375,13 +343,8 @@ export default function GameUI({ user }) {
 
                   {/* Cổng Siêu khó */}
                   <button 
-                    className="btn btn-outline" 
+                    className="btn btn-outline difficulty-btn" 
                     style={{ 
-                      padding: '1rem 1.25rem', 
-                      fontSize: '1rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
                       borderColor: 'rgba(139, 92, 246, 0.3)',
                       background: 'rgba(139, 92, 246, 0.05)',
                       color: 'var(--accent)'
@@ -475,7 +438,7 @@ export default function GameUI({ user }) {
         </div>
         
         {matchState.currentTopic && (
-          <div style={{ position: 'absolute', top: '5.5rem', left: '50%', transform: 'translateX(-50%)', fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', background: 'rgba(139, 92, 246, 0.1)', padding: '0.25rem 1rem', borderRadius: '4px' }}>
+          <div className="topic-badge" style={{ position: 'absolute', top: '5.5rem', left: '50%', transform: 'translateX(-50%)', fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', background: 'rgba(139, 92, 246, 0.1)', padding: '0.25rem 1rem', borderRadius: '4px' }}>
             {matchState.currentTopic}
           </div>
         )}

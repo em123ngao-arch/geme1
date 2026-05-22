@@ -438,3 +438,214 @@ h1, h2, h3, h4 {
   border-color: var(--accent);
   transform: translateY(-5px);
 }
+
+/* ==========================================================================
+   PREMIUM MOBILE RESPONSIVE DESIGN SYSTEM
+   ========================================================================== */
+
+/* Modal Overlay & Glassmorphic Content */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Lobby Responsive Layout */
+.lobby-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+}
+
+/* Difficulty Buttons Inside Modal */
+.difficulty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+/* Tablet & Smaller Screens Media Query (<= 900px) */
+@media (max-width: 900px) {
+  .lobby-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* Mobile Media Query (<= 768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 1.25rem 0.75rem !important;
+  }
+  
+  .glass-panel {
+    padding: 1.5rem 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .lobby-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1.25rem !important;
+    text-align: center !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .lobby-header > div {
+    width: 100%;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.75rem !important;
+  }
+
+  .vs-container {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    margin: 2rem 0 !important;
+  }
+
+  .vs-text {
+    font-size: 2rem !important;
+    margin: 0.25rem 0 !important;
+  }
+
+  .player-avatar {
+    width: 80px !important;
+    height: 80px !important;
+    font-size: 2.25rem !important;
+  }
+
+  /* Game Board Header Grid Adaptation */
+  .game-header {
+    display: grid !important;
+    grid-template-areas: 
+      "p1 p2"
+      "topic topic"
+      "stats stats" !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+    padding-bottom: 1.25rem !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .game-header > .score-board:first-of-type {
+    grid-area: p1 !important;
+    justify-self: start !important;
+  }
+
+  .game-header > .score-board:last-of-type {
+    grid-area: p2 !important;
+    justify-self: end !important;
+  }
+
+  .topic-badge {
+    grid-area: topic !important;
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    text-align: center !important;
+    margin: 0.25rem auto 0 auto !important;
+    display: inline-block !important;
+    width: fit-content !important;
+  }
+
+  .stats-container {
+    grid-area: stats !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+    padding: 0.5rem 1rem !important;
+    justify-content: space-around !important;
+    gap: 0.5rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .stat-item {
+    flex: 1 !important;
+  }
+
+  .stat-value {
+    font-size: 1rem !important;
+  }
+
+  .stat-label {
+    font-size: 0.55rem !important;
+  }
+}
+
+/* Extra Small Screens (<= 600px) */
+@media (max-width: 600px) {
+  .question-text {
+    font-size: 1.35rem !important;
+    margin-bottom: 1.75rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .option-btn {
+    padding: 1.15rem 1rem !important;
+    font-size: 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .timer-bar-container {
+    height: 7px !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  /* Compact difficulty selector inside modal */
+  .difficulty-btn {
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 0.75rem 1rem !important;
+  }
+  
+  .difficulty-btn span:last-child {
+    font-size: 0.7rem !important;
+  }
+}
+

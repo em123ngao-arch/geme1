@@ -88,7 +88,7 @@ export default function Lobby({ user, onLogout }) {
 
   return (
     <div className="container">
-      <header className="game-header" style={{ marginBottom: '1rem', paddingBottom: '1rem' }}>
+      <header className="game-header lobby-header" style={{ marginBottom: '1rem', paddingBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div 
             className="avatar-option" 
@@ -122,7 +122,7 @@ export default function Lobby({ user, onLogout }) {
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', flex: 1 }}>
+      <div className="lobby-layout">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', justifyContent: 'center' }}>
           
           <div className="glass-panel" style={{ textAlign: 'center' }}>
