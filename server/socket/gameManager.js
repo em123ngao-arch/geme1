@@ -1,13 +1,7 @@
 require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 
-const apiKeys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean);
-
-function getAIClient() {
-    if (apiKeys.length === 0) return null;
-    const randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];
-    return new GoogleGenAI({ apiKey: randomKey });
-}
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const fs = require('fs');
 const path = require('path');
 
@@ -18,37 +12,24 @@ function removeAccents(str) {
 async function generateQuestionsFromAI(topic, difficulty = "bình thường") {
     console.log(`[AI] Generating questions for: "${topic}" (Difficulty: ${difficulty})`);
     
-    const aiClient = getAIClient();
-    if (!aiClient) {
-        console.error("[AI] CRITICAL: GEMINI_API_KEY is missing or invalid!");
+    if (!process.env.GEMINI_API_KEY) {
+        console.error("[AI] CRITICAL: GEMINI_API_KEY is missing!");
         return []; // Caller will handle fallback
     }
 
     try {
-        const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm tiếng Việt chất lượng cao, chuyên thiết kế các câu đố học thuật và trí tuệ.
-Hãy tìm kiếm thông tin trên internet và tạo đúng 5 câu hỏi trắc nghiệm ĐỘC ĐÁO, cực kỳ THÚ VỊ, KHÓ, LẮT LÉO và mang tính thử thách cao về chủ đề cụ thể: "${topic}".
+        const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm. 
+Hãy tạo đúng 5 câu hỏi trắc nghiệm về chủ đề cụ thể: "${topic}".
 Yêu cầu:
-1. Bạn phải sử dụng công cụ Google Search (grounding) để lấy các kiến thức chính xác, mới nhất và các chi tiết thú vị về chủ đề "${topic}".
-2. Các câu hỏi này không được quá dễ, không dùng các kiến thức cơ bản phổ thông ai cũng biết. Hãy chọn các kiến thức chuyên sâu, thú vị, hoặc các câu hỏi đòi hỏi suy luận logic, phân tích kỹ lưỡng.
-3. Phương án đúng và các phương án gây nhiễu (options) phải có tính đánh đố cao, tương tự nhau để người chơi dễ bị nhầm lẫn nếu không đọc kỹ hoặc không có kiến thức chắc chắn.
-4. Ngôn ngữ: Tiếng Việt.
+1. Độ khó: ${difficulty}.
+2. Ngôn ngữ: Tiếng Việt.
+3. Nội dung phải chính xác, lôi cuốn và tập trung duy nhất vào "${topic}".
+4. Trả về một mảng JSON: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`;
 
-Yêu cầu định dạng JSON trả về:
-Một mảng gồm chính xác 5 đối tượng có cấu trúc:
-[
-  {
-    "q": "Nội dung câu hỏi trắc nghiệm lắt léo, thử thách?",
-    "options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
-    "a": 0, // Chỉ mục đáp án đúng trong mảng options (từ 0 tới 3)
-    "difficulty": "khó"
-  }
-]`;
-
-        const response = await aiClient.models.generateContent({
-            model: "gemini-2.5-flash",
+        const response = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
             contents: prompt,
             config: {
-                tools: [{ googleSearch: {} }],
                 responseMimeType: "application/json"
             }
         });
@@ -127,15 +108,35 @@ class GameManager {
         }
     }
 
-    getQuestionsFromCache(topic, count = 5) {
+    getQuestionsFromCache(topic, count = 5, difficulty = 'bình thường') {
         const topicLower = topic.toLowerCase().trim();
         const cacheEntry = this.questionsCache[topicLower];
         if (!cacheEntry || !cacheEntry.list || cacheEntry.list.length === 0) {
             console.warn(`⚠️ [Cache] Không tìm thấy câu hỏi cho chủ đề: "${topic}"`);
             return [];
         }
+
+        // Chuẩn hóa độ khó
+        let diffNorm = difficulty.toLowerCase().trim();
+        if (diffNorm.includes('dễ')) diffNorm = 'dễ';
+        else if (diffNorm.includes('khó') && !diffNorm.includes('cực')) diffNorm = 'khó';
+        else if (diffNorm.includes('cực khó') || diffNorm.includes('siêu')) diffNorm = 'khó'; // Dùng chung cache khó
+        else diffNorm = 'bình thường'; // Mặc định là bình thường (trung bình)
+
+        // Lọc câu hỏi theo độ khó
+        let filtered = cacheEntry.list.filter(q => {
+            const qDiff = (q.difficulty || 'bình thường').toLowerCase().trim();
+            return qDiff === diffNorm;
+        });
+
+        // Fallback nếu không có câu hỏi nào khớp độ khó
+        if (filtered.length === 0) {
+            console.warn(`⚠️ [Cache] Không tìm thấy câu hỏi độ khó "${difficulty}" cho chủ đề "${topic}". Dùng toàn bộ danh sách.`);
+            filtered = cacheEntry.list;
+        }
+
         // Trộn ngẫu nhiên câu hỏi
-        const shuffled = [...cacheEntry.list].sort(() => 0.5 - Math.random());
+        const shuffled = [...filtered].sort(() => 0.5 - Math.random());
         return shuffled.slice(0, count);
     }
 
@@ -293,67 +294,20 @@ class GameManager {
             match.status = 'generating';
             this.io.to(matchId).emit('match_state_update', this.getSafeMatchState(match));
 
-            // Chỉ dùng câu hỏi từ Cache nếu người dùng chọn độ khó mặc định
-            const isDefaultDifficulty = !explicitDifficulty || explicitDifficulty === 'bình thường';
-            let useCache = false;
-            if (isDefaultDifficulty) {
-                const topicLower = finalTopic.toLowerCase().trim();
-                useCache = !!this.questionsCache[topicLower];
-            }
+            // Dùng câu hỏi từ Cache nếu trong Cache RAM có sẵn chủ đề này
+            const topicLower = finalTopic.toLowerCase().trim();
+            const useCache = !!this.questionsCache[topicLower];
 
             let questions = [];
             if (useCache) {
-                console.log(`[Game] Chủ đề khớp cache, lấy từ RAM: "${finalTopic}"`);
-                questions = this.getQuestionsFromCache(finalTopic, 5);
+                console.log(`[Game] Chủ đề khớp cache, lấy từ RAM: "${finalTopic}" (Mức độ: ${difficulty})`);
+                questions = this.getQuestionsFromCache(finalTopic, 5, difficulty);
             }
 
             // Nếu không có trong cache hoặc chọn độ khó khác, dùng AI để sinh đề
             if (questions.length < 5) {
                 console.log(`[Game] Gọi AI tạo đề: "${finalTopic}" (Mức độ: ${difficulty})`);
                 questions = await generateQuestionsFromAI(finalTopic, difficulty);
-
-                // Lưu câu hỏi vào database và đồng bộ vào cache RAM để tăng độ phong phú
-                if (questions.length === 5) {
-                    console.log(`[AI] Tạo thành công 5 câu hỏi cho "${finalTopic}". Đang tiến hành lưu trữ vào database...`);
-                    if (this.db) {
-                        for (const q of questions) {
-                            try {
-                                // Kiểm tra trùng lặp trước khi chèn
-                                const check = await this.db.query('SELECT id FROM questions WHERE topic = $1 AND q = $2', [finalTopic, q.q]);
-                                if (check.rows.length === 0) {
-                                    await this.db.query(
-                                        'INSERT INTO questions (topic, q, options, a, difficulty) VALUES ($1, $2, $3, $4, $5)',
-                                        [finalTopic, q.q, q.options, q.a, difficulty]
-                                    );
-                                    console.log(`[DB] Đã lưu câu hỏi mới: "${q.q}"`);
-                                }
-                            } catch (dbErr) {
-                                console.error(`[DB] Lỗi khi lưu câu hỏi của "${finalTopic}":`, dbErr.message);
-                            }
-                        }
-                    }
-                    
-                    // Đồng bộ ngay lập tức vào cache RAM
-                    const topicLower = finalTopic.toLowerCase().trim();
-                    if (!this.questionsCache[topicLower]) {
-                        TopicCache: this.questionsCache[topicLower] = {
-                            name: finalTopic,
-                            list: []
-                        };
-                    }
-                    for (const q of questions) {
-                        const isDuplicate = this.questionsCache[topicLower].list.some(existing => existing.q === q.q);
-                        if (!isDuplicate) {
-                            this.questionsCache[topicLower].list.push({
-                                q: q.q,
-                                options: q.options,
-                                a: q.a,
-                                difficulty: difficulty
-                            });
-                        }
-                    }
-                    console.log(`[Cache] Đã đồng bộ 5 câu hỏi mới của "${finalTopic}" vào RAM cache.`);
-                }
             }
 
             // Fallback cuối cùng nếu AI thất bại: Lấy ngẫu nhiên từ Cache
