@@ -86,31 +86,51 @@ async function generateQuestionsBatch(topic, currentCount, batchSize, workerId) 
     const { client, keyAbbr } = getNextAIClient();
     console.log(`[Worker ${workerId}] [${topic}] Yêu cầu tạo ${batchSize} câu hỏi (Có ${currentCount}/${TARGET_QUESTIONS_PER_TOPIC}) | Sử dụng Key: ${keyAbbr}`);
 
-    const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm tiếng Việt chất lượng cao.
-Hãy tạo đúng ${batchSize} câu hỏi trắc nghiệm ĐỘC ĐÁO, cực kỳ thú vị và chính xác về chủ đề cụ thể: "${topic}".
+    const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm tiếng Việt chất lượng cao, chuyên thiết kế các câu đố học thuật và trí tuệ.
+Hãy tạo đúng ${batchSize} câu hỏi trắc nghiệm ĐỘC ĐÁO, cực kỳ THÚ VỊ, KHÓ, LẮT LÉO và mang tính thử thách cao về chủ đề cụ thể: "${topic}".
 Yêu cầu:
-1. Các câu hỏi này phải đa dạng về kiến thức, không được trùng lặp nội dung với nhau hoặc với các kiến thức quá cơ bản thông thường.
-2. Với chủ đề "Toán học & Logic", hãy tạo các bài toán đố vui, chuỗi số logic, đố mẹo toán học thú vị, có mức độ tư duy tốt.
+1. Các câu hỏi này không được quá dễ, không dùng các kiến thức cơ bản phổ thông ai cũng biết. Hãy chọn các kiến thức chuyên sâu, thú vị, hoặc các câu hỏi đòi hỏi suy luận logic, phân tích kỹ lưỡng.
+2. Phương án đúng và các phương án gây nhiễu (options) phải có tính đánh đố cao, tương tự nhau để người chơi dễ bị nhầm lẫn nếu không đọc kỹ hoặc không có kiến thức chắc chắn.
+3. Với chủ đề "Toán học & Logic", hãy tạo các bài toán đố vui logic phức tạp, chuỗi quy luật số học tinh vi, đố mẹo thông minh, đòi hỏi mức độ tư duy xuất sắc.
+4. Với các chủ đề khác như "Giải trí & Phim ảnh", hãy hỏi về các chi tiết thú vị, ít người biết, hậu trường, hoặc các cột mốc lắt léo trong lịch sử điện ảnh/âm nhạc thế giới và Việt Nam.
 
 Yêu cầu định dạng JSON trả về:
 Một mảng gồm chính xác ${batchSize} đối tượng có cấu trúc:
 [
   {
-    "q": "Nội dung câu hỏi trắc nghiệm rõ ràng, chính xác?",
+    "q": "Nội dung câu hỏi trắc nghiệm lắt léo, thử thách?",
     "options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
     "a": 0, // Chỉ mục đáp án đúng trong mảng options (từ 0 tới 3)
-    "difficulty": "bình thường" // Chọn ngẫu nhiên: "dễ", "bình thường", hoặc "khó" để bộ câu hỏi phong phú
+    "difficulty": "khó" // Đặt giá trị là "khó" hoặc "bình thường" (TUYỆT ĐỐI KHÔNG tạo câu hỏi mức độ "dễ")
   },
   ...
 ]`;
 
-    const response = await client.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json"
+    const candidateModels = ["gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
+    let response = null;
+    let lastErr = null;
+    
+    for (const modelName of candidateModels) {
+        try {
+            response = await client.models.generateContent({
+                model: modelName,
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json"
+                }
+            });
+            if (response) {
+                break;
+            }
+        } catch (err) {
+            lastErr = err;
+            console.log(`⚠️ [Worker ${workerId}] Model ${modelName} lỗi: ${err.message.substring(0, 100)}... Thử model tiếp theo.`);
         }
-    });
+    }
+
+    if (!response) {
+        throw lastErr || new Error("Tất cả các model ứng viên đều thất bại");
+    }
 
     let text = response.text;
 
