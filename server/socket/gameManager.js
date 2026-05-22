@@ -1,7 +1,13 @@
 require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKeys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean);
+
+function getAIClient() {
+    if (apiKeys.length === 0) return null;
+    const randomKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];
+    return new GoogleGenAI({ apiKey: randomKey });
+}
 const fs = require('fs');
 const path = require('path');
 
@@ -12,24 +18,37 @@ function removeAccents(str) {
 async function generateQuestionsFromAI(topic, difficulty = "bình thường") {
     console.log(`[AI] Generating questions for: "${topic}" (Difficulty: ${difficulty})`);
     
-    if (!process.env.GEMINI_API_KEY) {
-        console.error("[AI] CRITICAL: GEMINI_API_KEY is missing!");
+    const aiClient = getAIClient();
+    if (!aiClient) {
+        console.error("[AI] CRITICAL: GEMINI_API_KEY is missing or invalid!");
         return []; // Caller will handle fallback
     }
 
     try {
-        const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm. 
-Hãy tạo đúng 5 câu hỏi trắc nghiệm về chủ đề cụ thể: "${topic}".
+        const prompt = `Bạn là một chuyên gia tạo câu hỏi trắc nghiệm tiếng Việt chất lượng cao, chuyên thiết kế các câu đố học thuật và trí tuệ.
+Hãy tìm kiếm thông tin trên internet và tạo đúng 5 câu hỏi trắc nghiệm ĐỘC ĐÁO, cực kỳ THÚ VỊ, KHÓ, LẮT LÉO và mang tính thử thách cao về chủ đề cụ thể: "${topic}".
 Yêu cầu:
-1. Độ khó: ${difficulty}.
-2. Ngôn ngữ: Tiếng Việt.
-3. Nội dung phải chính xác, lôi cuốn và tập trung duy nhất vào "${topic}".
-4. Trả về một mảng JSON: [{"q": "Câu hỏi?", "options": ["A", "B", "C", "D"], "a": index_đúng_từ_0_tới_3}, ...]`;
+1. Bạn phải sử dụng công cụ Google Search (grounding) để lấy các kiến thức chính xác, mới nhất và các chi tiết thú vị về chủ đề "${topic}".
+2. Các câu hỏi này không được quá dễ, không dùng các kiến thức cơ bản phổ thông ai cũng biết. Hãy chọn các kiến thức chuyên sâu, thú vị, hoặc các câu hỏi đòi hỏi suy luận logic, phân tích kỹ lưỡng.
+3. Phương án đúng và các phương án gây nhiễu (options) phải có tính đánh đố cao, tương tự nhau để người chơi dễ bị nhầm lẫn nếu không đọc kỹ hoặc không có kiến thức chắc chắn.
+4. Ngôn ngữ: Tiếng Việt.
 
-        const response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+Yêu cầu định dạng JSON trả về:
+Một mảng gồm chính xác 5 đối tượng có cấu trúc:
+[
+  {
+    "q": "Nội dung câu hỏi trắc nghiệm lắt léo, thử thách?",
+    "options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
+    "a": 0, // Chỉ mục đáp án đúng trong mảng options (từ 0 tới 3)
+    "difficulty": "khó"
+  }
+]`;
+
+        const response = await aiClient.models.generateContent({
+            model: "gemini-2.5-flash",
             contents: prompt,
             config: {
+                tools: [{ googleSearch: {} }],
                 responseMimeType: "application/json"
             }
         });
@@ -292,6 +311,49 @@ class GameManager {
             if (questions.length < 5) {
                 console.log(`[Game] Gọi AI tạo đề: "${finalTopic}" (Mức độ: ${difficulty})`);
                 questions = await generateQuestionsFromAI(finalTopic, difficulty);
+
+                // Lưu câu hỏi vào database và đồng bộ vào cache RAM để tăng độ phong phú
+                if (questions.length === 5) {
+                    console.log(`[AI] Tạo thành công 5 câu hỏi cho "${finalTopic}". Đang tiến hành lưu trữ vào database...`);
+                    if (this.db) {
+                        for (const q of questions) {
+                            try {
+                                // Kiểm tra trùng lặp trước khi chèn
+                                const check = await this.db.query('SELECT id FROM questions WHERE topic = $1 AND q = $2', [finalTopic, q.q]);
+                                if (check.rows.length === 0) {
+                                    await this.db.query(
+                                        'INSERT INTO questions (topic, q, options, a, difficulty) VALUES ($1, $2, $3, $4, $5)',
+                                        [finalTopic, q.q, q.options, q.a, difficulty]
+                                    );
+                                    console.log(`[DB] Đã lưu câu hỏi mới: "${q.q}"`);
+                                }
+                            } catch (dbErr) {
+                                console.error(`[DB] Lỗi khi lưu câu hỏi của "${finalTopic}":`, dbErr.message);
+                            }
+                        }
+                    }
+                    
+                    // Đồng bộ ngay lập tức vào cache RAM
+                    const topicLower = finalTopic.toLowerCase().trim();
+                    if (!this.questionsCache[topicLower]) {
+                        TopicCache: this.questionsCache[topicLower] = {
+                            name: finalTopic,
+                            list: []
+                        };
+                    }
+                    for (const q of questions) {
+                        const isDuplicate = this.questionsCache[topicLower].list.some(existing => existing.q === q.q);
+                        if (!isDuplicate) {
+                            this.questionsCache[topicLower].list.push({
+                                q: q.q,
+                                options: q.options,
+                                a: q.a,
+                                difficulty: difficulty
+                            });
+                        }
+                    }
+                    console.log(`[Cache] Đã đồng bộ 5 câu hỏi mới của "${finalTopic}" vào RAM cache.`);
+                }
             }
 
             // Fallback cuối cùng nếu AI thất bại: Lấy ngẫu nhiên từ Cache
