@@ -123,43 +123,41 @@ export default function Lobby({ user, onLogout }) {
       </header>
 
       <div className="lobby-layout">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', justifyContent: 'center' }}>
+        <div className="lobby-modes-container">
           
-          <div className="glass-panel" style={{ textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Chế độ 1: Đấu Đơn (Solo)</h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+          <div className="glass-panel lobby-mode-card">
+            <h3 className="lobby-mode-title">Chế độ 1: Đấu Đơn (Solo)</h3>
+            <p className="lobby-mode-desc">
               5 câu hỏi ngẫu nhiên. Ai đạt 3 điểm trước sẽ giành chiến thắng! Đấu trí tốc độ cao.
             </p>
             <button 
-              className={`btn ${queueingMode === 1 ? 'btn-danger' : 'btn-primary'}`} 
-              style={{ width: '100%', fontSize: '1.25rem', padding: '1rem' }}
+              className={`btn lobby-mode-btn ${queueingMode === 1 ? 'btn-danger' : 'btn-primary'}`} 
               onClick={() => toggleQueue(1)}
             >
-              <Swords style={{ marginRight: '0.5rem' }} />
-              {queueingMode === 1 ? 'Đang tìm trận (Hủy)...' : 'Tìm Trận Đấu Đơn'}
+              <Swords size={20} className="btn-icon" />
+              <span>{queueingMode === 1 ? 'Đang tìm trận (Hủy)...' : 'Tìm Trận Đấu Đơn'}</span>
             </button>
           </div>
 
-          <div className="glass-panel" style={{ textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Chế độ 2: BO3 (Đấu 3 vòng)</h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+          <div className="glass-panel lobby-mode-card">
+            <h3 className="lobby-mode-title">Chế độ 2: BO3 (Đấu 3 vòng)</h3>
+            <p className="lobby-mode-desc">
               Chiến thuật chọn đề. Vòng 1 Ngẫu nhiên. Vòng 2 & 3: Lần lượt chọn chủ đề!
             </p>
             <button 
-              className={`btn ${queueingMode === 2 ? 'btn-danger' : 'btn-accent'}`} 
-              style={{ width: '100%', fontSize: '1.25rem', padding: '1rem' }}
+              className={`btn lobby-mode-btn ${queueingMode === 2 ? 'btn-danger' : 'btn-accent'}`} 
               onClick={() => toggleQueue(2)}
             >
-              <Trophy style={{ marginRight: '0.5rem' }} />
-              {queueingMode === 2 ? 'Đang tìm trận (Hủy)...' : 'Tìm Trận 3 Vòng'}
+              <Trophy size={20} className="btn-icon" />
+              <span>{queueingMode === 2 ? 'Đang tìm trận (Hủy)...' : 'Tìm Trận 3 Vòng'}</span>
             </button>
           </div>
 
         </div>
 
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '1rem' }}>
-          <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Kênh Chat Chung</h3>
-          <div className="chat-box" style={{ flex: 1 }}>
+        <div className="glass-panel lobby-chat-card">
+          <h3 className="lobby-chat-title">Kênh Chat Chung</h3>
+          <div className="chat-box">
             <div className="chat-messages">
               {chatMessages.map((msg, i) => {
                 const isMe = msg.senderId ? msg.senderId === user.id : msg.sender === user.displayName;
